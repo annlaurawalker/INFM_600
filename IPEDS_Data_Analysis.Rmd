@@ -58,6 +58,14 @@ year_2011$year <- 2011
  IPEDS <- rbind(year_2011, year_2012, year_2013, year_2014, year_2015)
  # Removes the individual years
 rm(year_2011, year_2012, year_2013, year_2014, year_2015)
+
+# Counts the number of "n/a" exist in each column of the final data frame, IPEDS
+IPEDS_na_count <- sapply(IPEDS, function(x) sum(is.na(x)))
+IPEDS_na_count <- as.data.frame.list(IPEDS_na_count)
+
+# Moves the data from wide to long:
+IPEDS_na_count <- melt(IPEDS_na_count)
+
  # Writes a text file to working directory 
  write.table(IPEDS,"IPEDS.txt",sep="\t",row.names=FALSE)
 ```
