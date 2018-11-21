@@ -155,7 +155,7 @@ vis_scatter <- ggplot(recent, aes(x=MALE_DEBT_MDN, y=FEMALE_DEBT_MDN, color=str_
 vis_scatter
 
 To see what this visualization looks like, please visit https://github.com/annlaurawalker/INFM_600/wiki/Sample-Visualizations
-![](https://c1.staticflickr.com/5/4888/45930301092_58dcfc3523_z.jpg)
+
  ```
  
  
