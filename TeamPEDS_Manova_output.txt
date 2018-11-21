@@ -1,0 +1,235 @@
+#Separating out variables needed from the main dataset for MANOVA in a different dataframe
+> FinalDataset <- Scorecard[,c
++                   (  "INSTNM",
++                      "UNITID",
++                      "Year",
++                     "C100_4",
++                     "C150_4",
++                     "D150_4",
++                     "COMPL_RPY_1YR_RT",
++                     "COMPL_RPY_3YR_RT",
++                     "COMPL_RPY_5YR_RT",
++                     "DEBT_N",
++                     "DEP_DEBT_MDN",
++                     "PCTFLOAN",
++                     "NPT41_PUB",
++                     "NPT42_PUB",
++                     "NPT43_PUB",
++                     "NPT44_PUB",
++                     "NPT45_PUB",
++                     "MN_EARN_WNE_MALE0_P6",
++                     "MN_EARN_WNE_MALE1_P6"
++                   )]
+> 
+> write.csv(FinalDataset, file = "C:/Users/Libraries/Documents/INFM 600/FinalDataset.csv")
+
+> dim(FinalDataset)
+[1] 70 19
+
+> #### INFM 600 Project ####
+> df<-read.csv("FinalDataset.csv")
+> View(FinalDataset)
+> df4 <- na.omit(FinalDataset)
+> require(dplyr)
+> require(mvnormtest)
+> require(pwr)
+> require(sm)
+> 
+> #separating variables into different datasets
+> INSTNM <- as.factor(FinalDataset[,1])
+> YEAR <- as.factor(FinalDataset[,3])
+> C100_4			<- as.matrix(FinalDataset[,4])
+> C150_4          <- as.matrix(FinalDataset[,5])
+> D150_4          <- as.matrix(FinalDataset[,6])
+> COMPL_RPY_3YR_RT<- as.matrix(FinalDataset[,8])
+> COMPL_RPY_5YR_RT<- as.matrix(FinalDataset[,9])
+> DEBT_N          <- as.matrix(FinalDataset[,10])
+> DEP_DEBT_MDN    <- as.matrix(FinalDataset[,11])
+> PCTFLOAN        <- as.matrix(FinalDataset[,12])
+> NPT41_PUB       <- as.matrix(FinalDataset[,13])
+> NPT42_PUB       <- as.matrix(FinalDataset[,14])
+> NPT43_PUB       <- as.matrix(FinalDataset[,15])
+> NPT44_PUB       <- as.matrix(FinalDataset[,16])
+> NPT45_PUB       <- as.matrix(FinalDataset[,17])
+> head(INSTNM)
+[1] University of Illinois at Urbana-Champaign Northwestern University                   
+[3] Indiana University                         University of Iowa                        
+[5] University of Maryland                     University of Michigan - Ann Arbor        
+14 Levels: Indiana University Michigan State University Northwestern University ... University of Wisconsin
+> head(YEAR)
+[1] 2016-17 2016-17 2016-17 2016-17 2016-17 2016-17
+Levels: 2012-13 2013-14 2014-15 2015-16 2016-17
+> 
+> #create R objects for the residuals from each treatment level
+> resC100_4		   =lm(FinalDataset$C100_4~FinalDataset$INSTNM)$residuals
+> resC150_4          =lm(FinalDataset$C150_4~FinalDataset$INSTNM)$residuals
+> resD150_4          =lm(FinalDataset$D150_4~FinalDataset$INSTNM)$residuals
+> resCOMPL_RPY_3YR_RT=lm(FinalDataset$COMPL_RPY_3YR_RT~FinalDataset$INSTNM)$residuals
+> resCOMPL_RPY_5YR_RT=lm(FinalDataset$COMPL_RPY_5YR_RT~FinalDataset$INSTNM)$residuals
+> resDEBT_N          =lm(FinalDataset$DEBT_N~FinalDataset$INSTNM)$residuals
+> resDEP_DEBT_MDN    =lm(FinalDataset$DEP_DEBT_MDN~FinalDataset$INSTNM)$residuals
+> resPCTFLOAN        =lm(FinalDataset$PCTFLOAN~FinalDataset$INSTNM)$residuals
+> #resNPT41_PUB       =lm(FinalDataset$NPT41_PUB~FinalDataset$INSTNM)$residuals
+> #resNPT42_PUB       =lm(FinalDataset$NPT42_PUB~FinalDataset$INSTNM)$residuals
+> #resNPT43_PUB       =lm(FinalDataset$NPT43_PUB~FinalDataset$INSTNM)$residuals
+> #resNPT44_PUB       =lm(FinalDataset$NPT44_PUB~FinalDataset$INSTNM)$residuals
+> #resNPT45_PUB       =lm(FinalDataset$NPT45_PUB~FinalDataset$INSTNM)$residuals
+> 
+> #checking for normality using qqplots
+> qqnorm(lm(FinalDataset$C100_4~FinalDataset$INSTNM)$residuals, main="resC100_4		   ", col=4)
+> qqline(lm(FinalDataset$C100_4~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+> 
+> qqnorm(lm(FinalDataset$C150_4~FinalDataset$INSTNM)$residuals, main="resC150_4          ", col=4)
+> qqline(lm(FinalDataset$C150_4~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+> 
+> qqnorm(lm(FinalDataset$D150_4~FinalDataset$INSTNM)$residuals, main="resD150_4          ", col=4)
+> qqline(lm(FinalDataset$D150_4~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+> 
+> qqnorm(lm(FinalDataset$COMPL_RPY_3YR_RT~FinalDataset$INSTNM)$residuals, main="resCOMPL_RPY_3YR_RT", col=4)
+> qqline(lm(FinalDataset$COMPL_RPY_3YR_RT~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+> 
+> qqnorm(lm(FinalDataset$COMPL_RPY_5YR_RT~FinalDataset$INSTNM)$residuals, main="resCOMPL_RPY_5YR_RT", col=4)
+> qqline(lm(FinalDataset$COMPL_RPY_5YR_RT~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+> 
+> qqnorm(lm(FinalDataset$DEBT_N~FinalDataset$INSTNM)$residuals, main="resDEBT_N          ", col=4)
+> qqline(lm(FinalDataset$DEBT_N~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+> 
+> qqnorm(lm(FinalDataset$DEP_DEBT_MDN~FinalDataset$INSTNM)$residuals, main="resDEP_DEBT_MDN    ", col=4)
+> qqline(lm(FinalDataset$DEP_DEBT_MDN~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+> 
+> qqnorm(lm(FinalDataset$PCTFLOAN~FinalDataset$INSTNM)$residuals, main="resPCTFLOAN        ", col=4)
+> qqline(lm(FinalDataset$PCTFLOAN~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+> 
+> #qqnorm(lm(FinalDataset$NPT41_PUB~FinalDataset$INSTNM)$residuals, main="resNPT41_PUB       ", col=4)
+> #qqline(lm(FinalDataset$NPT41_PUB~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+> #
+> #qqnorm(lm(FinalDataset$NPT42_PUB~FinalDataset$INSTNM)$residuals, main="resNPT42_PUB       ", col=4)
+> #qqline(lm(FinalDataset$NPT42_PUB~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+> #
+> #qqnorm(lm(FinalDataset$NPT43_PUB~FinalDataset$INSTNM)$residuals, main="resNPT43_PUB       ", col=4)
+> #qqline(lm(FinalDataset$NPT43_PUB~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+> #
+> #qqnorm(lm(FinalDataset$NPT44_PUB~FinalDataset$INSTNM)$residuals, main="resNPT44_PUB       ", col=4)
+> #qqline(lm(FinalDataset$NPT44_PUB~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+> #
+> #qqnorm(lm(FinalDataset$NPT45_PUB~FinalDataset$INSTNM)$residuals, main="resNPT45_PUB       ", col=4)
+> #qqline(lm(FinalDataset$NPT45_PUB~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+> 
+> 
+> #manova test
+> x <- manova(cbind(
++   FinalDataset$C100_4			 ,
++   FinalDataset$C150_4          ,
++   FinalDataset$D150_4          ,
++   FinalDataset$COMPL_RPY_3YR_RT,
++   FinalDataset$COMPL_RPY_5YR_RT,
++   FinalDataset$DEBT_N          ,
++   FinalDataset$DEP_DEBT_MDN    ,
++   FinalDataset$PCTFLOAN        ,
++   FinalDataset$NPT41_PUB       ,
++   FinalDataset$NPT42_PUB       ,
++   FinalDataset$NPT43_PUB       ,
++   FinalDataset$NPT44_PUB       ,
++   FinalDataset$NPT45_PUB       
++ ) ~ FinalDataset$INSTNM, data = FinalDataset)
+> 
+> #running wilks test
+> summary(x,test="Wilks")
+                    Df     Wilks approx F num Df den Df    Pr(>F)    
+FinalDataset$INSTNM 13 4.463e-13    52.37    169 430.46 < 2.2e-16 ***
+Residuals           56                                               
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+> 
+> #difference between the response vars
+> summary.aov(x)
+ Response 1 :
+                    Df  Sum Sq  Mean Sq F value    Pr(>F)    
+FinalDataset$INSTNM 13 1.11686 0.085913  162.49 < 2.2e-16 ***
+Residuals           56 0.02961 0.000529                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+ Response 2 :
+                    Df  Sum Sq   Mean Sq F value    Pr(>F)    
+FinalDataset$INSTNM 13 0.36811 0.0283160  158.79 < 2.2e-16 ***
+Residuals           56 0.00999 0.0001783                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+ Response 3 :
+                    Df    Sum Sq  Mean Sq F value    Pr(>F)    
+FinalDataset$INSTNM 13 157672921 12128686  151.93 < 2.2e-16 ***
+Residuals           56   4470503    79830                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+ Response 4 :
+                    Df   Sum Sq   Mean Sq F value    Pr(>F)    
+FinalDataset$INSTNM 13 0.129783 0.0099833  30.547 < 2.2e-16 ***
+Residuals           56 0.018302 0.0003268                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+ Response 5 :
+                    Df   Sum Sq   Mean Sq F value    Pr(>F)    
+FinalDataset$INSTNM 13 0.075247 0.0057882  14.588 1.538e-13 ***
+Residuals           56 0.022220 0.0003968                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+ Response 6 :
+                    Df     Sum Sq   Mean Sq F value    Pr(>F)    
+FinalDataset$INSTNM 13 4264104061 328008005  1692.4 < 2.2e-16 ***
+Residuals           56   10853178    193807                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+ Response 7 :
+                    Df    Sum Sq  Mean Sq F value    Pr(>F)    
+FinalDataset$INSTNM 13 282647278 21742098  39.401 < 2.2e-16 ***
+Residuals           56  30902066   551823                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+ Response 8 :
+                    Df   Sum Sq   Mean Sq F value    Pr(>F)    
+FinalDataset$INSTNM 13 0.294215 0.0226319  26.553 < 2.2e-16 ***
+Residuals           56 0.047731 0.0008523                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+ Response 9 :
+                    Df  Sum Sq Mean Sq F value    Pr(>F)    
+FinalDataset$INSTNM 13 17097.8 1315.21  7.5917 2.389e-08 ***
+Residuals           56  9701.6  173.24                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+ Response 10 :
+                    Df Sum Sq Mean Sq F value    Pr(>F)    
+FinalDataset$INSTNM 13  15170 1166.96  5.1192 7.081e-06 ***
+Residuals           56  12766  227.96                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+ Response 11 :
+                    Df  Sum Sq Mean Sq F value    Pr(>F)    
+FinalDataset$INSTNM 13 22223.7 1709.51  16.759 8.567e-15 ***
+Residuals           56  5712.4  102.01                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+ Response 12 :
+                    Df  Sum Sq Mean Sq F value    Pr(>F)    
+FinalDataset$INSTNM 13 25805.7 1985.05  52.179 < 2.2e-16 ***
+Residuals           56  2130.4   38.04                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+ Response 13 :
+                    Df  Sum Sq Mean Sq F value    Pr(>F)    
+FinalDataset$INSTNM 13 24748.2 1903.71  51.561 < 2.2e-16 ***
+Residuals           56  2067.6   36.92                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
