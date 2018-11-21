@@ -154,6 +154,8 @@ manual_colors <- c("#AF272F","#101820")
 vis_scatter <- ggplot(recent, aes(x=MALE_DEBT_MDN, y=FEMALE_DEBT_MDN, color=str_wrap(group,20))) + geom_point() +  labs(title = "Median Debt by Gender", subtitle = "Comparing University of MD, College Park to the Rest of the Big Ten Institutions", caption = "College Scorecard, 2016-17", x = "Median Male Debt", y = "Median Female Debt") + theme(plot.title = element_text(hjust = 0.5)) + scale_y_continuous(breaks = seq(10000, 25000, by=5000), limits=c(10000,25000))+ scale_x_continuous(breaks = seq(10000, 25000, by=5000), limits=c(10000,25000)) + theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) + labs(color = "Grouping")+ scale_color_manual(values = manual_colors)+ geom_point(size = 4) + theme(plot.title = element_text(hjust = 0.5)) 
 vis_scatter
 
+To see what this visualization looks like, please visit https://github.com/annlaurawalker/INFM_600/wiki/Sample-Visualizations
+![](https://c1.staticflickr.com/5/4888/45930301092_58dcfc3523_z.jpg)
  ```
  
  
