@@ -73,3 +73,202 @@ library(reshape2)
 combined_na_count <- melt(combined_na_count)
  # Writes a text file to working directory 
  write.table(combined,"combined_college_scorecards.txt",sep="\t",row.names=FALSE)
+ ```
+  ```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
+ # Some Descriptive Analytics and a visualization by Laura Walker
+ 
+ college_scorecards <-read.csv(text=getURL("https://raw.githubusercontent.com/annlaurawalker/INFM_600/edits_descriptive/FinalDataset.csv"), header=T)
+
+college_scorecards$group <- ifelse(college_scorecards$UNITID==163286, "MD", "Not MD")
+
+
+md <- subset(college_scorecards, UNITID==163286)
+
+md_repayment <- md[,c("Year", "DEP_DEBT_MDN", "FEMALE_DEBT_MDN", "GRAD_DEBT_MDN", "IND_DEBT_MDN", "MALE_DEBT_MDN", "MD_INC_DEBT_MDN", "NOPELL_DEBT_MDN", "NOTFIRSTGEN_DEBT_MDN", "PELL_DEBT_MDN", "WDRAW_DEBT_MDN")]
+
+# wide to long
+md_long <- gather(md_repayment, variable, md_value, DEP_DEBT_MDN:WDRAW_DEBT_MDN, factor_key=TRUE)
+
+# primary key to merge
+md_long$pk <- paste(md_long$Year,"-",md_long$variable,sep="")
+
+# getting min for some repayment variables by year
+min <- college_scorecards %>% group_by(Year) %>% summarise_each(funs(min), DEP_DEBT_MDN, FEMALE_DEBT_MDN, GRAD_DEBT_MDN, IND_DEBT_MDN, MALE_DEBT_MDN, MD_INC_DEBT_MDN, NOPELL_DEBT_MDN, NOTFIRSTGEN_DEBT_MDN, PELL_DEBT_MDN, WDRAW_DEBT_MDN)
+
+# wide to long
+min_long <- gather(min, variable, min_value, DEP_DEBT_MDN:WDRAW_DEBT_MDN, factor_key=TRUE)
+
+# primary key to merge
+min_long$pk <- paste(min_long$Year,"-",min_long$variable,sep="")
+
+# getting max for some repayment variables by year
+max <- college_scorecards %>% group_by(Year) %>% summarise_each(funs(max), DEP_DEBT_MDN, FEMALE_DEBT_MDN, GRAD_DEBT_MDN, IND_DEBT_MDN, MALE_DEBT_MDN, MD_INC_DEBT_MDN, NOPELL_DEBT_MDN, NOTFIRSTGEN_DEBT_MDN, PELL_DEBT_MDN, WDRAW_DEBT_MDN)
+# wide to long
+max_long <- gather(max, variable, max_value, DEP_DEBT_MDN:WDRAW_DEBT_MDN, factor_key=TRUE)
+# primary key to merge
+max_long$pk <- paste(max_long$Year,"-",max_long$variable,sep="")
+
+# getting mean for some repayment variables by year
+mean <- college_scorecards %>% group_by(Year) %>% summarise_each(funs(mean), DEP_DEBT_MDN, FEMALE_DEBT_MDN, GRAD_DEBT_MDN, IND_DEBT_MDN, MALE_DEBT_MDN, MD_INC_DEBT_MDN, NOPELL_DEBT_MDN, NOTFIRSTGEN_DEBT_MDN, PELL_DEBT_MDN, WDRAW_DEBT_MDN)
+
+#wide to long
+mean_long <- gather(mean, variable, mean_value, DEP_DEBT_MDN:WDRAW_DEBT_MDN, factor_key=TRUE)
+
+# primary key to merge
+mean_long$pk <- paste(mean_long$Year,"-",mean_long$variable,sep="")
+
+
+# Merging data frames into one
+# merge with min
+repayment <- merge(x=md_long, y=min_long, by.x="pk", by.y="pk", all.x = TRUE)
+# remove redundant fields
+repayment <- subset(repayment, select = -c(Year.y, variable.y))
+
+# merge with max
+repayment <- merge(x=repayment, y=max_long, by.x="pk", by.y="pk", all.x = TRUE)
+# remove redundant fields
+repayment <- subset(repayment, select = -c(Year, variable))
+
+# merge with mean
+repayment <- merge(x=repayment, y=mean_long, by.x="pk", by.y="pk", all.x = TRUE)
+# remove redundant fields
+repayment <- subset(repayment, select = -c(Year, variable, pk))
+
+names(repayment) <- c("Year", "Variable", "Maryland_Value", "Big_Ten_Min", "Big_Ten_Max", "Big_Ten_Mean")
+# Sorting the Dataframe by last Variable then Year
+repayment <- repayment[ order(repayment$Variable, (repayment$Year)), ]
+
+rm(max, max_long, md_repayment, mean, mean_long, min, min_long)
+
+# Reorder by column name
+repayment <- repayment[c("Variable", "Year", "Maryland_Value", "Big_Ten_Min", "Big_Ten_Max", "Big_Ten_Mean")]
+
+# Visualization
+
+recent <- subset(college_scorecards, Year=="2016-17")
+recent <- recent[,c("INSTNM", "Year", "group", "FEMALE_DEBT_MDN", "MALE_DEBT_MDN")]
+library(ggplot2)
+
+manual_colors <- c("#AF272F","#101820") 
+
+vis_scatter <- ggplot(recent, aes(x=MALE_DEBT_MDN, y=FEMALE_DEBT_MDN, color=str_wrap(group,20))) + geom_point() +  labs(title = "Median Debt by Gender", subtitle = "Comparing University of MD, College Park to the Rest of the Big Ten Institutions", caption = "College Scorecard, 2016-17", x = "Median Male Debt", y = "Median Female Debt") + theme(plot.title = element_text(hjust = 0.5)) + scale_y_continuous(breaks = seq(10000, 25000, by=5000), limits=c(10000,25000))+ scale_x_continuous(breaks = seq(10000, 25000, by=5000), limits=c(10000,25000)) + theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) + labs(color = "Grouping")+ scale_color_manual(values = manual_colors)+ geom_point(size = 4) + theme(plot.title = element_text(hjust = 0.5)) 
+vis_scatter
+
+ ```
+ 
+ 
+ ```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
+ # Predictive Analytics by Himanshi Manglunia & Kalpita Raut
+ #Installing packages - one time
+install.packages("dplyr")
+install.packages("mvnormtest")
+install.packages("pwr")
+install.packages("sm")
+
+#### INFM 600 Project ####
+FinalDataset <- read.csv(text=getURL("https://raw.githubusercontent.com/annlaurawalker/INFM_600/edits_descriptive/FinalDataset.csv"), header=T)
+View(FinalDataset)
+df4 <- na.omit(FinalDataset)
+require(dplyr)
+require(mvnormtest)
+require(pwr)
+require(sm)
+
+#separating variables into different datasets
+INSTNM <- as.factor(FinalDataset[,1])
+YEAR <- as.factor(FinalDataset[,3])
+C100_4			<- as.matrix(FinalDataset[,4])
+C150_4          <- as.matrix(FinalDataset[,5])
+D150_4          <- as.matrix(FinalDataset[,6])
+COMPL_RPY_3YR_RT<- as.matrix(FinalDataset[,8])
+COMPL_RPY_5YR_RT<- as.matrix(FinalDataset[,9])
+DEBT_N          <- as.matrix(FinalDataset[,10])
+DEP_DEBT_MDN    <- as.matrix(FinalDataset[,11])
+PCTFLOAN        <- as.matrix(FinalDataset[,12])
+NPT41_PUB       <- as.matrix(FinalDataset[,13])
+NPT42_PUB       <- as.matrix(FinalDataset[,14])
+NPT43_PUB       <- as.matrix(FinalDataset[,15])
+NPT44_PUB       <- as.matrix(FinalDataset[,16])
+NPT45_PUB       <- as.matrix(FinalDataset[,17])
+head(INSTNM)
+head(YEAR)
+
+#create R objects for the residuals from each treatment level
+resC100_4		   =lm(FinalDataset$C100_4~FinalDataset$INSTNM)$residuals
+resC150_4          =lm(FinalDataset$C150_4~FinalDataset$INSTNM)$residuals
+resD150_4          =lm(FinalDataset$D150_4~FinalDataset$INSTNM)$residuals
+resCOMPL_RPY_3YR_RT=lm(FinalDataset$COMPL_RPY_3YR_RT~FinalDataset$INSTNM)$residuals
+resCOMPL_RPY_5YR_RT=lm(FinalDataset$COMPL_RPY_5YR_RT~FinalDataset$INSTNM)$residuals
+resDEBT_N          =lm(FinalDataset$DEBT_N~FinalDataset$INSTNM)$residuals
+resDEP_DEBT_MDN    =lm(FinalDataset$DEP_DEBT_MDN~FinalDataset$INSTNM)$residuals
+resPCTFLOAN        =lm(FinalDataset$PCTFLOAN~FinalDataset$INSTNM)$residuals
+#resNPT41_PUB       =lm(FinalDataset$NPT41_PUB~FinalDataset$INSTNM)$residuals
+#resNPT42_PUB       =lm(FinalDataset$NPT42_PUB~FinalDataset$INSTNM)$residuals
+#resNPT43_PUB       =lm(FinalDataset$NPT43_PUB~FinalDataset$INSTNM)$residuals
+#resNPT44_PUB       =lm(FinalDataset$NPT44_PUB~FinalDataset$INSTNM)$residuals
+#resNPT45_PUB       =lm(FinalDataset$NPT45_PUB~FinalDataset$INSTNM)$residuals
+
+#checking for normality using qqplots
+qqnorm(lm(FinalDataset$C100_4~FinalDataset$INSTNM)$residuals, main="resC100_4		   ", col=4)
+qqline(lm(FinalDataset$C100_4~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+
+qqnorm(lm(FinalDataset$C150_4~FinalDataset$INSTNM)$residuals, main="resC150_4          ", col=4)
+qqline(lm(FinalDataset$C150_4~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+
+qqnorm(lm(FinalDataset$D150_4~FinalDataset$INSTNM)$residuals, main="resD150_4          ", col=4)
+qqline(lm(FinalDataset$D150_4~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+
+qqnorm(lm(FinalDataset$COMPL_RPY_3YR_RT~FinalDataset$INSTNM)$residuals, main="resCOMPL_RPY_3YR_RT", col=4)
+qqline(lm(FinalDataset$COMPL_RPY_3YR_RT~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+
+qqnorm(lm(FinalDataset$COMPL_RPY_5YR_RT~FinalDataset$INSTNM)$residuals, main="resCOMPL_RPY_5YR_RT", col=4)
+qqline(lm(FinalDataset$COMPL_RPY_5YR_RT~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+
+qqnorm(lm(FinalDataset$DEBT_N~FinalDataset$INSTNM)$residuals, main="resDEBT_N          ", col=4)
+qqline(lm(FinalDataset$DEBT_N~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+
+qqnorm(lm(FinalDataset$DEP_DEBT_MDN~FinalDataset$INSTNM)$residuals, main="resDEP_DEBT_MDN    ", col=4)
+qqline(lm(FinalDataset$DEP_DEBT_MDN~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+
+qqnorm(lm(FinalDataset$PCTFLOAN~FinalDataset$INSTNM)$residuals, main="resPCTFLOAN        ", col=4)
+qqline(lm(FinalDataset$PCTFLOAN~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+
+#qqnorm(lm(FinalDataset$NPT41_PUB~FinalDataset$INSTNM)$residuals, main="resNPT41_PUB       ", col=4)
+#qqline(lm(FinalDataset$NPT41_PUB~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+#
+#qqnorm(lm(FinalDataset$NPT42_PUB~FinalDataset$INSTNM)$residuals, main="resNPT42_PUB       ", col=4)
+#qqline(lm(FinalDataset$NPT42_PUB~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+#
+#qqnorm(lm(FinalDataset$NPT43_PUB~FinalDataset$INSTNM)$residuals, main="resNPT43_PUB       ", col=4)
+#qqline(lm(FinalDataset$NPT43_PUB~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+#
+#qqnorm(lm(FinalDataset$NPT44_PUB~FinalDataset$INSTNM)$residuals, main="resNPT44_PUB       ", col=4)
+#qqline(lm(FinalDataset$NPT44_PUB~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+#
+#qqnorm(lm(FinalDataset$NPT45_PUB~FinalDataset$INSTNM)$residuals, main="resNPT45_PUB       ", col=4)
+#qqline(lm(FinalDataset$NPT45_PUB~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
+
+
+#manova test
+x <- manova(cbind(
+  FinalDataset$C100_4			 ,
+  FinalDataset$C150_4          ,
+  FinalDataset$D150_4          ,
+  FinalDataset$COMPL_RPY_3YR_RT,
+  FinalDataset$COMPL_RPY_5YR_RT,
+  FinalDataset$DEBT_N          ,
+  FinalDataset$DEP_DEBT_MDN    ,
+  FinalDataset$PCTFLOAN        ,
+  FinalDataset$NPT41_PUB       ,
+  FinalDataset$NPT42_PUB       ,
+  FinalDataset$NPT43_PUB       ,
+  FinalDataset$NPT44_PUB       ,
+  FinalDataset$NPT45_PUB       
+) ~ FinalDataset$INSTNM, data = FinalDataset)
+
+#running wilks test
+summary(x,test="Wilks")
+
+#difference between the response vars
+summary.aov(x)
+```
