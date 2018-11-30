@@ -18,7 +18,6 @@ library(rscorecard)
 bigten <- data.frame(UNITID=c(151351, 171100, 147767, 204796, 214777, 243780, 186380, 145637, 153658, 163286, 170976, 174066, 181464, 240444), name=c('Indiana University', 'Michigan State University', 'Northwestern University', 'The Ohio State University', 'Penn State University', 'Purdue University', 'Rutgers University', 'University of Illinois at Urbana-Champaign', 'University of Iowa', 'University of Maryland', 'University of Michigan - Ann Arbor', 'University of Minnesota', 'University of Nebraska', 'University of Wisconsin'))
 ```
 
-
 ```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
 library(readxl)
 MERGED2016_17_PP <- read_excel("MERGED2016_17_PP.xlsx")
@@ -74,10 +73,10 @@ combined_na_count <- melt(combined_na_count)
  # Writes a text file to working directory 
  write.table(combined,"combined_college_scorecards.txt",sep="\t",row.names=FALSE)
  ```
-  ```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
+ ```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
  # Some Descriptive Analytics and a visualization by Laura Walker
  
- college_scorecards <-read.csv(text=getURL("https://raw.githubusercontent.com/annlaurawalker/INFM_600/edits_descriptive/FinalDataset.csv"), header=T)
+college_scorecards <-read.csv(text=getURL("https://raw.githubusercontent.com/annlaurawalker/INFM_600/edits_descriptive/FinalDataset.csv"), header=T)
 
 college_scorecards$group <- ifelse(college_scorecards$UNITID==163286, "MD", "Not MD")
 
@@ -156,10 +155,10 @@ vis_scatter
 
 To see what this visualization looks like, please visit https://github.com/annlaurawalker/INFM_600/wiki/Sample-Visualizations
 
- ```
+```
  
  
- ```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
+```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
  # Predictive Analytics by Himanshi Manglunia & Kalpita Raut
  #Installing packages - one time
 install.packages("dplyr")
