@@ -139,7 +139,7 @@ Levels: 2012-13 2013-14 2014-15 2015-16 2016-17
 FinalDataset$INSTNM 13 4.463e-13    52.37    169 430.46 < 2.2e-16 ***
 Residuals           56                                               
 ---
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
 > 
 > #difference between the response vars
 > summary.aov(x)
@@ -148,88 +148,88 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 FinalDataset$INSTNM 13 1.11686 0.085913  162.49 < 2.2e-16 ***
 Residuals           56 0.02961 0.000529                      
 ---
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
 
  Response 2 :
                     Df  Sum Sq   Mean Sq F value    Pr(>F)    
 FinalDataset$INSTNM 13 0.36811 0.0283160  158.79 < 2.2e-16 ***
 Residuals           56 0.00999 0.0001783                      
 ---
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
 
  Response 3 :
                     Df    Sum Sq  Mean Sq F value    Pr(>F)    
 FinalDataset$INSTNM 13 157672921 12128686  151.93 < 2.2e-16 ***
 Residuals           56   4470503    79830                      
 ---
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
 
  Response 4 :
                     Df   Sum Sq   Mean Sq F value    Pr(>F)    
 FinalDataset$INSTNM 13 0.129783 0.0099833  30.547 < 2.2e-16 ***
 Residuals           56 0.018302 0.0003268                      
 ---
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
 
  Response 5 :
                     Df   Sum Sq   Mean Sq F value    Pr(>F)    
 FinalDataset$INSTNM 13 0.075247 0.0057882  14.588 1.538e-13 ***
 Residuals           56 0.022220 0.0003968                      
 ---
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
 
  Response 6 :
                     Df     Sum Sq   Mean Sq F value    Pr(>F)    
 FinalDataset$INSTNM 13 4264104061 328008005  1692.4 < 2.2e-16 ***
 Residuals           56   10853178    193807                      
 ---
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
 
  Response 7 :
                     Df    Sum Sq  Mean Sq F value    Pr(>F)    
 FinalDataset$INSTNM 13 282647278 21742098  39.401 < 2.2e-16 ***
 Residuals           56  30902066   551823                      
 ---
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
 
  Response 8 :
                     Df   Sum Sq   Mean Sq F value    Pr(>F)    
 FinalDataset$INSTNM 13 0.294215 0.0226319  26.553 < 2.2e-16 ***
 Residuals           56 0.047731 0.0008523                      
 ---
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
 
  Response 9 :
                     Df  Sum Sq Mean Sq F value    Pr(>F)    
 FinalDataset$INSTNM 13 17097.8 1315.21  7.5917 2.389e-08 ***
 Residuals           56  9701.6  173.24                      
 ---
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
 
  Response 10 :
                     Df Sum Sq Mean Sq F value    Pr(>F)    
 FinalDataset$INSTNM 13  15170 1166.96  5.1192 7.081e-06 ***
 Residuals           56  12766  227.96                      
 ---
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
 
  Response 11 :
                     Df  Sum Sq Mean Sq F value    Pr(>F)    
 FinalDataset$INSTNM 13 22223.7 1709.51  16.759 8.567e-15 ***
 Residuals           56  5712.4  102.01                      
 ---
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
 
  Response 12 :
                     Df  Sum Sq Mean Sq F value    Pr(>F)    
 FinalDataset$INSTNM 13 25805.7 1985.05  52.179 < 2.2e-16 ***
 Residuals           56  2130.4   38.04                      
 ---
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
 
  Response 13 :
                     Df  Sum Sq Mean Sq F value    Pr(>F)    
 FinalDataset$INSTNM 13 24748.2 1903.71  51.561 < 2.2e-16 ***
 Residuals           56  2067.6   36.92                      
 ---
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
