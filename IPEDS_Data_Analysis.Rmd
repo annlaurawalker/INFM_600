@@ -273,3 +273,23 @@ summary(x,test="Wilks")
 #difference between the response vars
 summary.aov(x)
 ```
+# Visualizations done by Laura Walker
+college_scorecards <-read.csv(text=getURL("https://raw.githubusercontent.com/annlaurawalker/INFM_600/edits_descriptive/FinalDataset.csv"), header=T)
+
+# constructing a data frame of completion for non-white students
+completion_rates <- college_scorecards[,c("INSTNM","Year",  "D150_4_2MOR", "D150_4_AIAN", "D150_4_ASIAN", "D150_4_BLACK", "D150_4_HISP", "D150_4_NHPI", "D150_4_NRA", "D150_4_UNKN")]
+
+# making data wide to long
+completion_rates_long <- gather(completion_rates, variable, value, D150_4_2MOR:D150_4_UNKN, factor_key=TRUE)
+
+# classifying races into Underrepresented minority groups. 
+completion_rates_long$URM <- ifelse(completion_rates_long$variable== "D150_4_UNKN", "Unknown", ifelse(completion_rates_long$variable== "D150_4_NRA", "Foreign", ifelse(completion_rates_long$variable== "D150_4_ASIAN" |completion_rates_long$variable== "D150_4_2MOR", "Other Minority", "Under-Represented Minority")))
+
+
+# creating a new field for a shortened year
+completion_rates_long$Year_Short <- ifelse(completion_rates_long$Year== "2016-17", 2017, ifelse(completion_rates_long$Year== "2015-16", 2016, ifelse(completion_rates_long$Year== "2014-15", "2015", ifelse(completion_rates_long$Year== "2013-14", 2014, 2013))))
+
+vis_stacked <-ggplot(completion_rates_long,   aes(x=Year_Short, y=value, fill=str_wrap(URM, 20))) + geom_bar(stat="identity", position = "fill") + scale_y_continuous(labels = percent_format()) + theme_bw() + labs(title = "Non-White Completion Breakdown", subtitle = "", caption = "College Scorecards, 2012-2013 to 2016-2017", x = "Year", y = "Total") + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) + facet_wrap(~INSTNM, labeller = label_wrap_gen(multi_line = TRUE), scales="free", ncol=3) +scale_fill_brewer(palette="Set3") 
+
+To see what this visualization looks like, please visit https://github.com/annlaurawalker/INFM_600/wiki/Sample-Visualizations
+```
