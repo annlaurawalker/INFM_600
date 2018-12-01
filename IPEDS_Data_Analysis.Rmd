@@ -293,3 +293,41 @@ vis_stacked <-ggplot(completion_rates_long,   aes(x=Year_Short, y=value, fill=st
 
 To see what this visualization looks like, please visit https://github.com/annlaurawalker/INFM_600/wiki/Sample-Visualizations
 ```
+```
+# Visualizations done by Himanshi Manglunia
+# Read data
+data = read.csv("C:/Users/himan/Downloads/INFM600/combined_college_scorecards.csv")
+data_repayment = data[,c( "INSTNM",
+                         "FEMALE_RPY_3YR_RT_SUPP",
+                        "MALE_RPY_3YR_RT_SUPP")]
+
+data_gender_rpy_m = data.frame(data_repayment$INSTNM, data_repayment$MALE_RPY_3YR_RT_SUPP, "Male")
+colnames(data_gender_rpy_m) <- c("Institute_name", "Repayment_rate", "Gender")
+data_gender_rpy_f = data.frame(data_repayment$INSTNM, data_repayment$FEMALE_RPY_3YR_RT_SUPP, "Female")
+colnames(data_gender_rpy_f) <- c("Institute_name", "Repayment_rate", "Gender")
+data_repayment = rbind(data_gender_rpy_m, data_gender_rpy_f)
+
+data_repayment
+aggdata <- aggregate(data_repayment, by=list(data_repayment$Institute_name, data_repayment$Gender), FUN=mean)
+aggdata
+data_repayment = data.frame(aggdata$Group.1,aggdata$Repayment_rate, aggdata$Group.2)
+colnames(data_repayment) <- c("Institute_name", "Repayment_rate", "Gender")
+data_repayment
+
+library(ggplot2)
+library(ggthemes)
+options(scipen = 999)  # turns of scientific notations like 1e+40
+
+# X Axis Breaks and Labels 
+brks <- seq(-15000000, 15000000, 5000000)
+lbls = paste0(as.character(c(seq(15, 0, -5), seq(5, 15, 5))), "m")
+
+# Plot
+ggplot(data_repayment, aes(x = Institute_name, y = Repayment_rate, fill = Gender)) +   # Fill column
+  geom_bar(stat = "identity", width = .6) +   # draw the bars
+  coord_flip() +  # Flip axes
+  labs(title="Repayment rate by Gender") +
+  theme_tufte() +  # Tufte theme from ggfortify
+  theme(plot.title = element_text(hjust = .5), 
+        axis.ticks = element_blank()) +   # Centre plot title
+  scale_fill_brewer(palette = "Dark2")  # Color palette
