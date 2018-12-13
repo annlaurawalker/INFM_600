@@ -1,7 +1,7 @@
 ---
 title: "IPEDS Data"
 author: "Himanshi Manglunia, Kalpita Raut, Laura Walker"
-date: "November 20, 2018"
+date: "December 13, 2018"
 output: html_document
 ---
 
@@ -11,160 +11,245 @@ output: html_document
 # install.packages("RODBC") # only needs to be run once
 library(RODBC)
 library(rscorecard)
-```
- ## Data from year 2015-16
-```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
+library(dplyr)
+library(mvnormtest)
+library(pwr)
+library(sm)
+library(RCurl)
+library(ggplot2)
+library(scales)
+library(stringr)
+devtools::install_github('cttobin/ggthemr')
+ggthemr('fresh')
 
+manual_colors <- c("#AF272F","#101820")
+
+```
+ ## Uploading five years of College Scorecards and a list of Big Ten Institutions
+```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
 bigten <- data.frame(UNITID=c(151351, 171100, 147767, 204796, 214777, 243780, 186380, 145637, 153658, 163286, 170976, 174066, 181464, 240444), name=c('Indiana University', 'Michigan State University', 'Northwestern University', 'The Ohio State University', 'Penn State University', 'Purdue University', 'Rutgers University', 'University of Illinois at Urbana-Champaign', 'University of Iowa', 'University of Maryland', 'University of Michigan - Ann Arbor', 'University of Minnesota', 'University of Nebraska', 'University of Wisconsin'))
 ```
 
 ```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
 library(readxl)
+setwd("C:/Users/alwalker/Desktop/College Scorecard")
 MERGED2016_17_PP <- read_excel("MERGED2016_17_PP.xlsx")
 MERGED2016_17_PP <- merge(bigten, MERGED2016_17_PP, by.x="UNITID", by.y="UNITID", all.x = TRUE)
 MERGED2016_17_PP$Year <- "2016-17"
+MERGED2016_17_PP <- MERGED2016_17_PP[,c("UNITID", "name", "PCIP01", "PCIP03", "PCIP04", "PCIP05", "PCIP09", "PCIP10", "PCIP11", "PCIP12", "PCIP13", "PCIP14", "PCIP15", "PCIP16", "PCIP19", "PCIP22", "PCIP23", "PCIP24", "PCIP25", "PCIP26", "PCIP27", "PCIP29", "PCIP30", "PCIP31", "PCIP38", "PCIP39", "PCIP40", "PCIP41", "PCIP42", "PCIP43", "PCIP44", "PCIP45", "PCIP46", "PCIP47", "PCIP48", "PCIP49", "PCIP50", "PCIP51", "PCIP52", "PCIP54", "CIP01BACHL", "CIP03BACHL", "CIP04BACHL", "CIP05BACHL", "CIP09BACHL", "CIP10BACHL", "CIP11BACHL", "CIP12BACHL", "CIP13BACHL", "CIP14BACHL", "CIP15BACHL", "CIP16BACHL", "CIP19BACHL", "CIP22BACHL", "CIP23BACHL", "CIP24BACHL", "CIP25BACHL", "CIP26BACHL", "CIP27BACHL", "CIP29BACHL", "CIP30BACHL", "CIP31BACHL", "CIP38BACHL", "CIP39BACHL", "CIP40BACHL", "CIP41BACHL", "CIP42BACHL", "CIP43BACHL", "CIP44BACHL", "CIP45BACHL", "CIP46BACHL", "CIP47BACHL", "CIP48BACHL", "CIP49BACHL", "CIP50BACHL", "CIP51BACHL", "CIP52BACHL", "CIP54BACHL", "NPT4_PUB", "NPT41_PUB", "NPT42_PUB", "NPT43_PUB", "NPT44_PUB", "NPT45_PUB", "NPT4_048_PUB", "NPT4_3075_PUB", "NPT4_75UP_PUB", "NUM4_PUB", "NUM41_PUB", "NUM42_PUB", "NUM43_PUB", "NUM44_PUB", "NUM45_PUB", "PCTPELL", "C150_4", "D150_4", "C150_4_NRA", "PCTFLOAN", "COMPL_RPY_1YR_RT", "FEMALE_RPY_1YR_RT", "MALE_RPY_1YR_RT", "COMPL_RPY_3YR_RT", "FEMALE_RPY_3YR_RT", "MALE_RPY_3YR_RT", "COMPL_RPY_5YR_RT", "FEMALE_RPY_5YR_RT", "MALE_RPY_5YR_RT", "GRAD_DEBT_MDN", "WDRAW_DEBT_MDN", "LO_INC_DEBT_MDN", "MD_INC_DEBT_MDN", "HI_INC_DEBT_MDN", "DEP_DEBT_MDN", "IND_DEBT_MDN", "PELL_DEBT_MDN", "NOPELL_DEBT_MDN", "FEMALE_DEBT_MDN", "MALE_DEBT_MDN", "FIRSTGEN_DEBT_MDN", "NOTFIRSTGEN_DEBT_MDN", "DEBT_N", "GRAD_DEBT_N", "WDRAW_DEBT_N", "LO_INC_DEBT_N", "MD_INC_DEBT_N", "HI_INC_DEBT_N", "DEP_DEBT_N", "IND_DEBT_N", "PELL_DEBT_N", "NOPELL_DEBT_N", "FEMALE_DEBT_N", "MALE_DEBT_N", "FIRSTGEN_DEBT_N", "NOTFIRSTGEN_DEBT_N", "FEMALE_RPY_1YR_N", "MALE_RPY_1YR_N", "FEMALE_RPY_3YR_N", "MALE_RPY_3YR_N", "FEMALE_RPY_5YR_N", "MALE_RPY_5YR_N", "MN_EARN_WNE_INDEP0_P6", "MN_EARN_WNE_INDEP1_P6", "MN_EARN_WNE_MALE0_P6", "MN_EARN_WNE_MALE1_P6", "GRAD_DEBT_MDN_SUPP", "FEMALE_RPY_3YR_RT_SUPP", "MALE_RPY_3YR_RT_SUPP", "C100_4", "D150_4_WHITE", "D150_4_BLACK", "D150_4_HISP", "D150_4_ASIAN", "D150_4_AIAN", "D150_4_NHPI", "D150_4_2MOR", "D150_4_NRA", "D150_4_UNKN", "Year", "FEMALE_RPY_3YR_RT_SUPP","MALE_RPY_3YR_RT_SUPP", "DEBT_MDN_SUPP", "MD_EARN_WNE_P10", "MD_EARN_WNE_P6", "MD_EARN_WNE_P8", "GRADS", "UG")]
 
-MERGED2016_17_PP <- MERGED2016_17_PP[,c("UNITID", "name", "PCIP01", "PCIP03", "PCIP04", "PCIP05", "PCIP09", "PCIP10", "PCIP11", "PCIP12", "PCIP13", "PCIP14", "PCIP15", "PCIP16", "PCIP19", "PCIP22", "PCIP23", "PCIP24", "PCIP25", "PCIP26", "PCIP27", "PCIP29", "PCIP30", "PCIP31", "PCIP38", "PCIP39", "PCIP40", "PCIP41", "PCIP42", "PCIP43", "PCIP44", "PCIP45", "PCIP46", "PCIP47", "PCIP48", "PCIP49", "PCIP50", "PCIP51", "PCIP52", "PCIP54", "CIP01BACHL", "CIP03BACHL", "CIP04BACHL", "CIP05BACHL", "CIP09BACHL", "CIP10BACHL", "CIP11BACHL", "CIP12BACHL", "CIP13BACHL", "CIP14BACHL", "CIP15BACHL", "CIP16BACHL", "CIP19BACHL", "CIP22BACHL", "CIP23BACHL", "CIP24BACHL", "CIP25BACHL", "CIP26BACHL", "CIP27BACHL", "CIP29BACHL", "CIP30BACHL", "CIP31BACHL", "CIP38BACHL", "CIP39BACHL", "CIP40BACHL", "CIP41BACHL", "CIP42BACHL", "CIP43BACHL", "CIP44BACHL", "CIP45BACHL", "CIP46BACHL", "CIP47BACHL", "CIP48BACHL", "CIP49BACHL", "CIP50BACHL", "CIP51BACHL", "CIP52BACHL", "CIP54BACHL", "NPT4_PUB", "NPT41_PUB", "NPT42_PUB", "NPT43_PUB", "NPT44_PUB", "NPT45_PUB", "NPT4_048_PUB", "NPT4_3075_PUB", "NPT4_75UP_PUB", "NUM4_PUB", "NUM41_PUB", "NUM42_PUB", "NUM43_PUB", "NUM44_PUB", "NUM45_PUB", "PCTPELL", "C150_4", "D150_4", "C150_4_NRA", "PCTFLOAN", "COMPL_RPY_1YR_RT", "FEMALE_RPY_1YR_RT", "MALE_RPY_1YR_RT", "COMPL_RPY_3YR_RT", "FEMALE_RPY_3YR_RT", "MALE_RPY_3YR_RT", "COMPL_RPY_5YR_RT", "FEMALE_RPY_5YR_RT", "MALE_RPY_5YR_RT", "GRAD_DEBT_MDN", "WDRAW_DEBT_MDN", "LO_INC_DEBT_MDN", "MD_INC_DEBT_MDN", "HI_INC_DEBT_MDN", "DEP_DEBT_MDN", "IND_DEBT_MDN", "PELL_DEBT_MDN", "NOPELL_DEBT_MDN", "FEMALE_DEBT_MDN", "MALE_DEBT_MDN", "FIRSTGEN_DEBT_MDN", "NOTFIRSTGEN_DEBT_MDN", "DEBT_N", "GRAD_DEBT_N", "WDRAW_DEBT_N", "LO_INC_DEBT_N", "MD_INC_DEBT_N", "HI_INC_DEBT_N", "DEP_DEBT_N", "IND_DEBT_N", "PELL_DEBT_N", "NOPELL_DEBT_N", "FEMALE_DEBT_N", "MALE_DEBT_N", "FIRSTGEN_DEBT_N", "NOTFIRSTGEN_DEBT_N", "FEMALE_RPY_1YR_N", "MALE_RPY_1YR_N", "FEMALE_RPY_3YR_N", "MALE_RPY_3YR_N", "FEMALE_RPY_5YR_N", "MALE_RPY_5YR_N", "MN_EARN_WNE_INDEP0_P6", "MN_EARN_WNE_INDEP1_P6", "MN_EARN_WNE_MALE0_P6", "MN_EARN_WNE_MALE1_P6", "GRAD_DEBT_MDN_SUPP", "FEMALE_RPY_3YR_RT_SUPP", "MALE_RPY_3YR_RT_SUPP", "C100_4", "D150_4_WHITE", "D150_4_BLACK", "D150_4_HISP", "D150_4_ASIAN", "D150_4_AIAN", "D150_4_NHPI", "D150_4_2MOR", "D150_4_NRA", "D150_4_UNKN", "Year")]
-```
-
-```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
 MERGED2015_16_PP <- read_excel("MERGED2015_16_PP.xlsx")
 MERGED2015_16_PP <- merge(bigten, MERGED2015_16_PP, by.x="UNITID", by.y="UNITID", all.x = TRUE)
 MERGED2015_16_PP$Year <- "2015-16"
+MERGED2015_16_PP <- MERGED2015_16_PP[,c("UNITID", "name","PCIP01", "PCIP03", "PCIP04", "PCIP05", "PCIP09", "PCIP10", "PCIP11", "PCIP12", "PCIP13", "PCIP14", "PCIP15", "PCIP16", "PCIP19", "PCIP22", "PCIP23", "PCIP24", "PCIP25", "PCIP26", "PCIP27", "PCIP29", "PCIP30", "PCIP31", "PCIP38", "PCIP39", "PCIP40", "PCIP41", "PCIP42", "PCIP43", "PCIP44", "PCIP45", "PCIP46", "PCIP47", "PCIP48", "PCIP49", "PCIP50", "PCIP51", "PCIP52", "PCIP54", "CIP01BACHL", "CIP03BACHL", "CIP04BACHL", "CIP05BACHL", "CIP09BACHL", "CIP10BACHL", "CIP11BACHL", "CIP12BACHL", "CIP13BACHL", "CIP14BACHL", "CIP15BACHL", "CIP16BACHL", "CIP19BACHL", "CIP22BACHL", "CIP23BACHL", "CIP24BACHL", "CIP25BACHL", "CIP26BACHL", "CIP27BACHL", "CIP29BACHL", "CIP30BACHL", "CIP31BACHL", "CIP38BACHL", "CIP39BACHL", "CIP40BACHL", "CIP41BACHL", "CIP42BACHL", "CIP43BACHL", "CIP44BACHL", "CIP45BACHL", "CIP46BACHL", "CIP47BACHL", "CIP48BACHL", "CIP49BACHL", "CIP50BACHL", "CIP51BACHL", "CIP52BACHL", "CIP54BACHL", "NPT4_PUB", "NPT41_PUB", "NPT42_PUB", "NPT43_PUB", "NPT44_PUB", "NPT45_PUB", "NPT4_048_PUB", "NPT4_3075_PUB", "NPT4_75UP_PUB", "NUM4_PUB", "NUM41_PUB", "NUM42_PUB", "NUM43_PUB", "NUM44_PUB", "NUM45_PUB", "PCTPELL", "C150_4", "D150_4", "C150_4_NRA", "PCTFLOAN", "COMPL_RPY_1YR_RT", "FEMALE_RPY_1YR_RT", "MALE_RPY_1YR_RT", "COMPL_RPY_3YR_RT", "FEMALE_RPY_3YR_RT", "MALE_RPY_3YR_RT", "COMPL_RPY_5YR_RT", "FEMALE_RPY_5YR_RT", "MALE_RPY_5YR_RT", "GRAD_DEBT_MDN", "WDRAW_DEBT_MDN", "LO_INC_DEBT_MDN", "MD_INC_DEBT_MDN", "HI_INC_DEBT_MDN", "DEP_DEBT_MDN", "IND_DEBT_MDN", "PELL_DEBT_MDN", "NOPELL_DEBT_MDN", "FEMALE_DEBT_MDN", "MALE_DEBT_MDN", "FIRSTGEN_DEBT_MDN", "NOTFIRSTGEN_DEBT_MDN", "DEBT_N", "GRAD_DEBT_N", "WDRAW_DEBT_N", "LO_INC_DEBT_N", "MD_INC_DEBT_N", "HI_INC_DEBT_N", "DEP_DEBT_N", "IND_DEBT_N", "PELL_DEBT_N", "NOPELL_DEBT_N", "FEMALE_DEBT_N", "MALE_DEBT_N", "FIRSTGEN_DEBT_N", "NOTFIRSTGEN_DEBT_N", "FEMALE_RPY_1YR_N", "MALE_RPY_1YR_N", "FEMALE_RPY_3YR_N", "MALE_RPY_3YR_N", "FEMALE_RPY_5YR_N", "MALE_RPY_5YR_N", "MN_EARN_WNE_INDEP0_P6", "MN_EARN_WNE_INDEP1_P6", "MN_EARN_WNE_MALE0_P6", "MN_EARN_WNE_MALE1_P6", "GRAD_DEBT_MDN_SUPP", "FEMALE_RPY_3YR_RT_SUPP", "MALE_RPY_3YR_RT_SUPP", "C100_4", "D150_4_WHITE", "D150_4_BLACK", "D150_4_HISP", "D150_4_ASIAN", "D150_4_AIAN", "D150_4_NHPI", "D150_4_2MOR", "D150_4_NRA", "D150_4_UNKN", "Year", "FEMALE_RPY_3YR_RT_SUPP","MALE_RPY_3YR_RT_SUPP", "DEBT_MDN_SUPP", "MD_EARN_WNE_P10", "MD_EARN_WNE_P6", "MD_EARN_WNE_P8", "GRADS", "UG")]
 
-MERGED2015_16_PP <- MERGED2015_16_PP[,c("UNITID", "name","PCIP01", "PCIP03", "PCIP04", "PCIP05", "PCIP09", "PCIP10", "PCIP11", "PCIP12", "PCIP13", "PCIP14", "PCIP15", "PCIP16", "PCIP19", "PCIP22", "PCIP23", "PCIP24", "PCIP25", "PCIP26", "PCIP27", "PCIP29", "PCIP30", "PCIP31", "PCIP38", "PCIP39", "PCIP40", "PCIP41", "PCIP42", "PCIP43", "PCIP44", "PCIP45", "PCIP46", "PCIP47", "PCIP48", "PCIP49", "PCIP50", "PCIP51", "PCIP52", "PCIP54", "CIP01BACHL", "CIP03BACHL", "CIP04BACHL", "CIP05BACHL", "CIP09BACHL", "CIP10BACHL", "CIP11BACHL", "CIP12BACHL", "CIP13BACHL", "CIP14BACHL", "CIP15BACHL", "CIP16BACHL", "CIP19BACHL", "CIP22BACHL", "CIP23BACHL", "CIP24BACHL", "CIP25BACHL", "CIP26BACHL", "CIP27BACHL", "CIP29BACHL", "CIP30BACHL", "CIP31BACHL", "CIP38BACHL", "CIP39BACHL", "CIP40BACHL", "CIP41BACHL", "CIP42BACHL", "CIP43BACHL", "CIP44BACHL", "CIP45BACHL", "CIP46BACHL", "CIP47BACHL", "CIP48BACHL", "CIP49BACHL", "CIP50BACHL", "CIP51BACHL", "CIP52BACHL", "CIP54BACHL", "NPT4_PUB", "NPT41_PUB", "NPT42_PUB", "NPT43_PUB", "NPT44_PUB", "NPT45_PUB", "NPT4_048_PUB", "NPT4_3075_PUB", "NPT4_75UP_PUB", "NUM4_PUB", "NUM41_PUB", "NUM42_PUB", "NUM43_PUB", "NUM44_PUB", "NUM45_PUB", "PCTPELL", "C150_4", "D150_4", "C150_4_NRA", "PCTFLOAN", "COMPL_RPY_1YR_RT", "FEMALE_RPY_1YR_RT", "MALE_RPY_1YR_RT", "COMPL_RPY_3YR_RT", "FEMALE_RPY_3YR_RT", "MALE_RPY_3YR_RT", "COMPL_RPY_5YR_RT", "FEMALE_RPY_5YR_RT", "MALE_RPY_5YR_RT", "GRAD_DEBT_MDN", "WDRAW_DEBT_MDN", "LO_INC_DEBT_MDN", "MD_INC_DEBT_MDN", "HI_INC_DEBT_MDN", "DEP_DEBT_MDN", "IND_DEBT_MDN", "PELL_DEBT_MDN", "NOPELL_DEBT_MDN", "FEMALE_DEBT_MDN", "MALE_DEBT_MDN", "FIRSTGEN_DEBT_MDN", "NOTFIRSTGEN_DEBT_MDN", "DEBT_N", "GRAD_DEBT_N", "WDRAW_DEBT_N", "LO_INC_DEBT_N", "MD_INC_DEBT_N", "HI_INC_DEBT_N", "DEP_DEBT_N", "IND_DEBT_N", "PELL_DEBT_N", "NOPELL_DEBT_N", "FEMALE_DEBT_N", "MALE_DEBT_N", "FIRSTGEN_DEBT_N", "NOTFIRSTGEN_DEBT_N", "FEMALE_RPY_1YR_N", "MALE_RPY_1YR_N", "FEMALE_RPY_3YR_N", "MALE_RPY_3YR_N", "FEMALE_RPY_5YR_N", "MALE_RPY_5YR_N", "MN_EARN_WNE_INDEP0_P6", "MN_EARN_WNE_INDEP1_P6", "MN_EARN_WNE_MALE0_P6", "MN_EARN_WNE_MALE1_P6", "GRAD_DEBT_MDN_SUPP", "FEMALE_RPY_3YR_RT_SUPP", "MALE_RPY_3YR_RT_SUPP", "C100_4", "D150_4_WHITE", "D150_4_BLACK", "D150_4_HISP", "D150_4_ASIAN", "D150_4_AIAN", "D150_4_NHPI", "D150_4_2MOR", "D150_4_NRA", "D150_4_UNKN", "Year")]
-```
-
-```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
 MERGED2014_15_PP <- read_excel("MERGED2014_15_PP.xlsx")
 MERGED2014_15_PP <- merge(bigten, MERGED2014_15_PP, by.x="UNITID", by.y="UNITID", all.x = TRUE)
 MERGED2014_15_PP$Year <- "2014-15"
+MERGED2014_15_PP <- MERGED2014_15_PP[,c("UNITID", "name","PCIP01", "PCIP03", "PCIP04", "PCIP05", "PCIP09", "PCIP10", "PCIP11", "PCIP12", "PCIP13", "PCIP14", "PCIP15", "PCIP16", "PCIP19", "PCIP22", "PCIP23", "PCIP24", "PCIP25", "PCIP26", "PCIP27", "PCIP29", "PCIP30", "PCIP31", "PCIP38", "PCIP39", "PCIP40", "PCIP41", "PCIP42", "PCIP43", "PCIP44", "PCIP45", "PCIP46", "PCIP47", "PCIP48", "PCIP49", "PCIP50", "PCIP51", "PCIP52", "PCIP54", "CIP01BACHL", "CIP03BACHL", "CIP04BACHL", "CIP05BACHL", "CIP09BACHL", "CIP10BACHL", "CIP11BACHL", "CIP12BACHL", "CIP13BACHL", "CIP14BACHL", "CIP15BACHL", "CIP16BACHL", "CIP19BACHL", "CIP22BACHL", "CIP23BACHL", "CIP24BACHL", "CIP25BACHL", "CIP26BACHL", "CIP27BACHL", "CIP29BACHL", "CIP30BACHL", "CIP31BACHL", "CIP38BACHL", "CIP39BACHL", "CIP40BACHL", "CIP41BACHL", "CIP42BACHL", "CIP43BACHL", "CIP44BACHL", "CIP45BACHL", "CIP46BACHL", "CIP47BACHL", "CIP48BACHL", "CIP49BACHL", "CIP50BACHL", "CIP51BACHL", "CIP52BACHL", "CIP54BACHL", "NPT4_PUB", "NPT41_PUB", "NPT42_PUB", "NPT43_PUB", "NPT44_PUB", "NPT45_PUB", "NPT4_048_PUB", "NPT4_3075_PUB", "NPT4_75UP_PUB", "NUM4_PUB", "NUM41_PUB", "NUM42_PUB", "NUM43_PUB", "NUM44_PUB", "NUM45_PUB", "PCTPELL", "C150_4", "D150_4", "C150_4_NRA", "PCTFLOAN", "COMPL_RPY_1YR_RT", "FEMALE_RPY_1YR_RT", "MALE_RPY_1YR_RT", "COMPL_RPY_3YR_RT", "FEMALE_RPY_3YR_RT", "MALE_RPY_3YR_RT", "COMPL_RPY_5YR_RT", "FEMALE_RPY_5YR_RT", "MALE_RPY_5YR_RT", "GRAD_DEBT_MDN", "WDRAW_DEBT_MDN", "LO_INC_DEBT_MDN", "MD_INC_DEBT_MDN", "HI_INC_DEBT_MDN", "DEP_DEBT_MDN", "IND_DEBT_MDN", "PELL_DEBT_MDN", "NOPELL_DEBT_MDN", "FEMALE_DEBT_MDN", "MALE_DEBT_MDN", "FIRSTGEN_DEBT_MDN", "NOTFIRSTGEN_DEBT_MDN", "DEBT_N", "GRAD_DEBT_N", "WDRAW_DEBT_N", "LO_INC_DEBT_N", "MD_INC_DEBT_N", "HI_INC_DEBT_N", "DEP_DEBT_N", "IND_DEBT_N", "PELL_DEBT_N", "NOPELL_DEBT_N", "FEMALE_DEBT_N", "MALE_DEBT_N", "FIRSTGEN_DEBT_N", "NOTFIRSTGEN_DEBT_N", "FEMALE_RPY_1YR_N", "MALE_RPY_1YR_N", "FEMALE_RPY_3YR_N", "MALE_RPY_3YR_N", "FEMALE_RPY_5YR_N", "MALE_RPY_5YR_N", "MN_EARN_WNE_INDEP0_P6", "MN_EARN_WNE_INDEP1_P6", "MN_EARN_WNE_MALE0_P6", "MN_EARN_WNE_MALE1_P6", "GRAD_DEBT_MDN_SUPP", "FEMALE_RPY_3YR_RT_SUPP", "MALE_RPY_3YR_RT_SUPP", "C100_4", "D150_4_WHITE", "D150_4_BLACK", "D150_4_HISP", "D150_4_ASIAN", "D150_4_AIAN", "D150_4_NHPI", "D150_4_2MOR", "D150_4_NRA", "D150_4_UNKN", "Year", "FEMALE_RPY_3YR_RT_SUPP","MALE_RPY_3YR_RT_SUPP", "DEBT_MDN_SUPP", "MD_EARN_WNE_P10", "MD_EARN_WNE_P6", "MD_EARN_WNE_P8", "GRADS", "UG")]
 
-MERGED2014_15_PP <- MERGED2014_15_PP[,c("UNITID", "name","PCIP01", "PCIP03", "PCIP04", "PCIP05", "PCIP09", "PCIP10", "PCIP11", "PCIP12", "PCIP13", "PCIP14", "PCIP15", "PCIP16", "PCIP19", "PCIP22", "PCIP23", "PCIP24", "PCIP25", "PCIP26", "PCIP27", "PCIP29", "PCIP30", "PCIP31", "PCIP38", "PCIP39", "PCIP40", "PCIP41", "PCIP42", "PCIP43", "PCIP44", "PCIP45", "PCIP46", "PCIP47", "PCIP48", "PCIP49", "PCIP50", "PCIP51", "PCIP52", "PCIP54", "CIP01BACHL", "CIP03BACHL", "CIP04BACHL", "CIP05BACHL", "CIP09BACHL", "CIP10BACHL", "CIP11BACHL", "CIP12BACHL", "CIP13BACHL", "CIP14BACHL", "CIP15BACHL", "CIP16BACHL", "CIP19BACHL", "CIP22BACHL", "CIP23BACHL", "CIP24BACHL", "CIP25BACHL", "CIP26BACHL", "CIP27BACHL", "CIP29BACHL", "CIP30BACHL", "CIP31BACHL", "CIP38BACHL", "CIP39BACHL", "CIP40BACHL", "CIP41BACHL", "CIP42BACHL", "CIP43BACHL", "CIP44BACHL", "CIP45BACHL", "CIP46BACHL", "CIP47BACHL", "CIP48BACHL", "CIP49BACHL", "CIP50BACHL", "CIP51BACHL", "CIP52BACHL", "CIP54BACHL", "NPT4_PUB", "NPT41_PUB", "NPT42_PUB", "NPT43_PUB", "NPT44_PUB", "NPT45_PUB", "NPT4_048_PUB", "NPT4_3075_PUB", "NPT4_75UP_PUB", "NUM4_PUB", "NUM41_PUB", "NUM42_PUB", "NUM43_PUB", "NUM44_PUB", "NUM45_PUB", "PCTPELL", "C150_4", "D150_4", "C150_4_NRA", "PCTFLOAN", "COMPL_RPY_1YR_RT", "FEMALE_RPY_1YR_RT", "MALE_RPY_1YR_RT", "COMPL_RPY_3YR_RT", "FEMALE_RPY_3YR_RT", "MALE_RPY_3YR_RT", "COMPL_RPY_5YR_RT", "FEMALE_RPY_5YR_RT", "MALE_RPY_5YR_RT", "GRAD_DEBT_MDN", "WDRAW_DEBT_MDN", "LO_INC_DEBT_MDN", "MD_INC_DEBT_MDN", "HI_INC_DEBT_MDN", "DEP_DEBT_MDN", "IND_DEBT_MDN", "PELL_DEBT_MDN", "NOPELL_DEBT_MDN", "FEMALE_DEBT_MDN", "MALE_DEBT_MDN", "FIRSTGEN_DEBT_MDN", "NOTFIRSTGEN_DEBT_MDN", "DEBT_N", "GRAD_DEBT_N", "WDRAW_DEBT_N", "LO_INC_DEBT_N", "MD_INC_DEBT_N", "HI_INC_DEBT_N", "DEP_DEBT_N", "IND_DEBT_N", "PELL_DEBT_N", "NOPELL_DEBT_N", "FEMALE_DEBT_N", "MALE_DEBT_N", "FIRSTGEN_DEBT_N", "NOTFIRSTGEN_DEBT_N", "FEMALE_RPY_1YR_N", "MALE_RPY_1YR_N", "FEMALE_RPY_3YR_N", "MALE_RPY_3YR_N", "FEMALE_RPY_5YR_N", "MALE_RPY_5YR_N", "MN_EARN_WNE_INDEP0_P6", "MN_EARN_WNE_INDEP1_P6", "MN_EARN_WNE_MALE0_P6", "MN_EARN_WNE_MALE1_P6", "GRAD_DEBT_MDN_SUPP", "FEMALE_RPY_3YR_RT_SUPP", "MALE_RPY_3YR_RT_SUPP", "C100_4", "D150_4_WHITE", "D150_4_BLACK", "D150_4_HISP", "D150_4_ASIAN", "D150_4_AIAN", "D150_4_NHPI", "D150_4_2MOR", "D150_4_NRA", "D150_4_UNKN", "Year")]
-```
-
-```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
 MERGED2013_14_PP <- read_excel("MERGED2013_14_PP.xlsx")
 MERGED2013_14_PP <- merge(bigten, MERGED2013_14_PP, by.x="UNITID", by.y="UNITID", all.x = TRUE)
 MERGED2013_14_PP$Year <- "2013-14"
+MERGED2013_14_PP <- MERGED2013_14_PP[,c("UNITID", "name","PCIP01", "PCIP03", "PCIP04", "PCIP05", "PCIP09", "PCIP10", "PCIP11", "PCIP12", "PCIP13", "PCIP14", "PCIP15", "PCIP16", "PCIP19", "PCIP22", "PCIP23", "PCIP24", "PCIP25", "PCIP26", "PCIP27", "PCIP29", "PCIP30", "PCIP31", "PCIP38", "PCIP39", "PCIP40", "PCIP41", "PCIP42", "PCIP43", "PCIP44", "PCIP45", "PCIP46", "PCIP47", "PCIP48", "PCIP49", "PCIP50", "PCIP51", "PCIP52", "PCIP54", "CIP01BACHL", "CIP03BACHL", "CIP04BACHL", "CIP05BACHL", "CIP09BACHL", "CIP10BACHL", "CIP11BACHL", "CIP12BACHL", "CIP13BACHL", "CIP14BACHL", "CIP15BACHL", "CIP16BACHL", "CIP19BACHL", "CIP22BACHL", "CIP23BACHL", "CIP24BACHL", "CIP25BACHL", "CIP26BACHL", "CIP27BACHL", "CIP29BACHL", "CIP30BACHL", "CIP31BACHL", "CIP38BACHL", "CIP39BACHL", "CIP40BACHL", "CIP41BACHL", "CIP42BACHL", "CIP43BACHL", "CIP44BACHL", "CIP45BACHL", "CIP46BACHL", "CIP47BACHL", "CIP48BACHL", "CIP49BACHL", "CIP50BACHL", "CIP51BACHL", "CIP52BACHL", "CIP54BACHL", "NPT4_PUB", "NPT41_PUB", "NPT42_PUB", "NPT43_PUB", "NPT44_PUB", "NPT45_PUB", "NPT4_048_PUB", "NPT4_3075_PUB", "NPT4_75UP_PUB", "NUM4_PUB", "NUM41_PUB", "NUM42_PUB", "NUM43_PUB", "NUM44_PUB", "NUM45_PUB", "PCTPELL", "C150_4", "D150_4", "C150_4_NRA", "PCTFLOAN", "COMPL_RPY_1YR_RT", "FEMALE_RPY_1YR_RT", "MALE_RPY_1YR_RT", "COMPL_RPY_3YR_RT", "FEMALE_RPY_3YR_RT", "MALE_RPY_3YR_RT", "COMPL_RPY_5YR_RT", "FEMALE_RPY_5YR_RT", "MALE_RPY_5YR_RT", "GRAD_DEBT_MDN", "WDRAW_DEBT_MDN", "LO_INC_DEBT_MDN", "MD_INC_DEBT_MDN", "HI_INC_DEBT_MDN", "DEP_DEBT_MDN", "IND_DEBT_MDN", "PELL_DEBT_MDN", "NOPELL_DEBT_MDN", "FEMALE_DEBT_MDN", "MALE_DEBT_MDN", "FIRSTGEN_DEBT_MDN", "NOTFIRSTGEN_DEBT_MDN", "DEBT_N", "GRAD_DEBT_N", "WDRAW_DEBT_N", "LO_INC_DEBT_N", "MD_INC_DEBT_N", "HI_INC_DEBT_N", "DEP_DEBT_N", "IND_DEBT_N", "PELL_DEBT_N", "NOPELL_DEBT_N", "FEMALE_DEBT_N", "MALE_DEBT_N", "FIRSTGEN_DEBT_N", "NOTFIRSTGEN_DEBT_N", "FEMALE_RPY_1YR_N", "MALE_RPY_1YR_N", "FEMALE_RPY_3YR_N", "MALE_RPY_3YR_N", "FEMALE_RPY_5YR_N", "MALE_RPY_5YR_N", "MN_EARN_WNE_INDEP0_P6", "MN_EARN_WNE_INDEP1_P6", "MN_EARN_WNE_MALE0_P6", "MN_EARN_WNE_MALE1_P6", "GRAD_DEBT_MDN_SUPP", "FEMALE_RPY_3YR_RT_SUPP", "MALE_RPY_3YR_RT_SUPP", "C100_4", "D150_4_WHITE", "D150_4_BLACK", "D150_4_HISP", "D150_4_ASIAN", "D150_4_AIAN", "D150_4_NHPI", "D150_4_2MOR", "D150_4_NRA", "D150_4_UNKN", "Year", "FEMALE_RPY_3YR_RT_SUPP","MALE_RPY_3YR_RT_SUPP", "DEBT_MDN_SUPP", "MD_EARN_WNE_P10", "MD_EARN_WNE_P6", "MD_EARN_WNE_P8", "GRADS", "UG")]
 
-MERGED2013_14_PP <- MERGED2013_14_PP[,c("UNITID", "name","PCIP01", "PCIP03", "PCIP04", "PCIP05", "PCIP09", "PCIP10", "PCIP11", "PCIP12", "PCIP13", "PCIP14", "PCIP15", "PCIP16", "PCIP19", "PCIP22", "PCIP23", "PCIP24", "PCIP25", "PCIP26", "PCIP27", "PCIP29", "PCIP30", "PCIP31", "PCIP38", "PCIP39", "PCIP40", "PCIP41", "PCIP42", "PCIP43", "PCIP44", "PCIP45", "PCIP46", "PCIP47", "PCIP48", "PCIP49", "PCIP50", "PCIP51", "PCIP52", "PCIP54", "CIP01BACHL", "CIP03BACHL", "CIP04BACHL", "CIP05BACHL", "CIP09BACHL", "CIP10BACHL", "CIP11BACHL", "CIP12BACHL", "CIP13BACHL", "CIP14BACHL", "CIP15BACHL", "CIP16BACHL", "CIP19BACHL", "CIP22BACHL", "CIP23BACHL", "CIP24BACHL", "CIP25BACHL", "CIP26BACHL", "CIP27BACHL", "CIP29BACHL", "CIP30BACHL", "CIP31BACHL", "CIP38BACHL", "CIP39BACHL", "CIP40BACHL", "CIP41BACHL", "CIP42BACHL", "CIP43BACHL", "CIP44BACHL", "CIP45BACHL", "CIP46BACHL", "CIP47BACHL", "CIP48BACHL", "CIP49BACHL", "CIP50BACHL", "CIP51BACHL", "CIP52BACHL", "CIP54BACHL", "NPT4_PUB", "NPT41_PUB", "NPT42_PUB", "NPT43_PUB", "NPT44_PUB", "NPT45_PUB", "NPT4_048_PUB", "NPT4_3075_PUB", "NPT4_75UP_PUB", "NUM4_PUB", "NUM41_PUB", "NUM42_PUB", "NUM43_PUB", "NUM44_PUB", "NUM45_PUB", "PCTPELL", "C150_4", "D150_4", "C150_4_NRA", "PCTFLOAN", "COMPL_RPY_1YR_RT", "FEMALE_RPY_1YR_RT", "MALE_RPY_1YR_RT", "COMPL_RPY_3YR_RT", "FEMALE_RPY_3YR_RT", "MALE_RPY_3YR_RT", "COMPL_RPY_5YR_RT", "FEMALE_RPY_5YR_RT", "MALE_RPY_5YR_RT", "GRAD_DEBT_MDN", "WDRAW_DEBT_MDN", "LO_INC_DEBT_MDN", "MD_INC_DEBT_MDN", "HI_INC_DEBT_MDN", "DEP_DEBT_MDN", "IND_DEBT_MDN", "PELL_DEBT_MDN", "NOPELL_DEBT_MDN", "FEMALE_DEBT_MDN", "MALE_DEBT_MDN", "FIRSTGEN_DEBT_MDN", "NOTFIRSTGEN_DEBT_MDN", "DEBT_N", "GRAD_DEBT_N", "WDRAW_DEBT_N", "LO_INC_DEBT_N", "MD_INC_DEBT_N", "HI_INC_DEBT_N", "DEP_DEBT_N", "IND_DEBT_N", "PELL_DEBT_N", "NOPELL_DEBT_N", "FEMALE_DEBT_N", "MALE_DEBT_N", "FIRSTGEN_DEBT_N", "NOTFIRSTGEN_DEBT_N", "FEMALE_RPY_1YR_N", "MALE_RPY_1YR_N", "FEMALE_RPY_3YR_N", "MALE_RPY_3YR_N", "FEMALE_RPY_5YR_N", "MALE_RPY_5YR_N", "MN_EARN_WNE_INDEP0_P6", "MN_EARN_WNE_INDEP1_P6", "MN_EARN_WNE_MALE0_P6", "MN_EARN_WNE_MALE1_P6", "GRAD_DEBT_MDN_SUPP", "FEMALE_RPY_3YR_RT_SUPP", "MALE_RPY_3YR_RT_SUPP", "C100_4", "D150_4_WHITE", "D150_4_BLACK", "D150_4_HISP", "D150_4_ASIAN", "D150_4_AIAN", "D150_4_NHPI", "D150_4_2MOR", "D150_4_NRA", "D150_4_UNKN", "Year")]
-```
-
-```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
 MERGED2012_13_PP <- read_excel("MERGED2012_13_PP.xlsx")
 MERGED2012_13_PP <- merge(bigten, MERGED2012_13_PP, by.x="UNITID", by.y="UNITID", all.x = TRUE)
 MERGED2012_13_PP$Year <- "2012-13"
-
-MERGED2012_13_PP <- MERGED2012_13_PP[,c("UNITID", "name","PCIP01", "PCIP03", "PCIP04", "PCIP05", "PCIP09", "PCIP10", "PCIP11", "PCIP12", "PCIP13", "PCIP14", "PCIP15", "PCIP16", "PCIP19", "PCIP22", "PCIP23", "PCIP24", "PCIP25", "PCIP26", "PCIP27", "PCIP29", "PCIP30", "PCIP31", "PCIP38", "PCIP39", "PCIP40", "PCIP41", "PCIP42", "PCIP43", "PCIP44", "PCIP45", "PCIP46", "PCIP47", "PCIP48", "PCIP49", "PCIP50", "PCIP51", "PCIP52", "PCIP54", "CIP01BACHL", "CIP03BACHL", "CIP04BACHL", "CIP05BACHL", "CIP09BACHL", "CIP10BACHL", "CIP11BACHL", "CIP12BACHL", "CIP13BACHL", "CIP14BACHL", "CIP15BACHL", "CIP16BACHL", "CIP19BACHL", "CIP22BACHL", "CIP23BACHL", "CIP24BACHL", "CIP25BACHL", "CIP26BACHL", "CIP27BACHL", "CIP29BACHL", "CIP30BACHL", "CIP31BACHL", "CIP38BACHL", "CIP39BACHL", "CIP40BACHL", "CIP41BACHL", "CIP42BACHL", "CIP43BACHL", "CIP44BACHL", "CIP45BACHL", "CIP46BACHL", "CIP47BACHL", "CIP48BACHL", "CIP49BACHL", "CIP50BACHL", "CIP51BACHL", "CIP52BACHL", "CIP54BACHL", "NPT4_PUB", "NPT41_PUB", "NPT42_PUB", "NPT43_PUB", "NPT44_PUB", "NPT45_PUB", "NPT4_048_PUB", "NPT4_3075_PUB", "NPT4_75UP_PUB", "NUM4_PUB", "NUM41_PUB", "NUM42_PUB", "NUM43_PUB", "NUM44_PUB", "NUM45_PUB", "PCTPELL", "C150_4", "D150_4", "C150_4_NRA", "PCTFLOAN", "COMPL_RPY_1YR_RT", "FEMALE_RPY_1YR_RT", "MALE_RPY_1YR_RT", "COMPL_RPY_3YR_RT", "FEMALE_RPY_3YR_RT", "MALE_RPY_3YR_RT", "COMPL_RPY_5YR_RT", "FEMALE_RPY_5YR_RT", "MALE_RPY_5YR_RT", "GRAD_DEBT_MDN", "WDRAW_DEBT_MDN", "LO_INC_DEBT_MDN", "MD_INC_DEBT_MDN", "HI_INC_DEBT_MDN", "DEP_DEBT_MDN", "IND_DEBT_MDN", "PELL_DEBT_MDN", "NOPELL_DEBT_MDN", "FEMALE_DEBT_MDN", "MALE_DEBT_MDN", "FIRSTGEN_DEBT_MDN", "NOTFIRSTGEN_DEBT_MDN", "DEBT_N", "GRAD_DEBT_N", "WDRAW_DEBT_N", "LO_INC_DEBT_N", "MD_INC_DEBT_N", "HI_INC_DEBT_N", "DEP_DEBT_N", "IND_DEBT_N", "PELL_DEBT_N", "NOPELL_DEBT_N", "FEMALE_DEBT_N", "MALE_DEBT_N", "FIRSTGEN_DEBT_N", "NOTFIRSTGEN_DEBT_N", "FEMALE_RPY_1YR_N", "MALE_RPY_1YR_N", "FEMALE_RPY_3YR_N", "MALE_RPY_3YR_N", "FEMALE_RPY_5YR_N", "MALE_RPY_5YR_N", "MN_EARN_WNE_INDEP0_P6", "MN_EARN_WNE_INDEP1_P6", "MN_EARN_WNE_MALE0_P6", "MN_EARN_WNE_MALE1_P6", "GRAD_DEBT_MDN_SUPP", "FEMALE_RPY_3YR_RT_SUPP", "MALE_RPY_3YR_RT_SUPP", "C100_4", "D150_4_WHITE", "D150_4_BLACK", "D150_4_HISP", "D150_4_ASIAN", "D150_4_AIAN", "D150_4_NHPI", "D150_4_2MOR", "D150_4_NRA", "D150_4_UNKN", "Year")]
+MERGED2012_13_PP <- MERGED2012_13_PP[,c("UNITID", "name","PCIP01", "PCIP03", "PCIP04", "PCIP05", "PCIP09", "PCIP10", "PCIP11", "PCIP12", "PCIP13", "PCIP14", "PCIP15", "PCIP16", "PCIP19", "PCIP22", "PCIP23", "PCIP24", "PCIP25", "PCIP26", "PCIP27", "PCIP29", "PCIP30", "PCIP31", "PCIP38", "PCIP39", "PCIP40", "PCIP41", "PCIP42", "PCIP43", "PCIP44", "PCIP45", "PCIP46", "PCIP47", "PCIP48", "PCIP49", "PCIP50", "PCIP51", "PCIP52", "PCIP54", "CIP01BACHL", "CIP03BACHL", "CIP04BACHL", "CIP05BACHL", "CIP09BACHL", "CIP10BACHL", "CIP11BACHL", "CIP12BACHL", "CIP13BACHL", "CIP14BACHL", "CIP15BACHL", "CIP16BACHL", "CIP19BACHL", "CIP22BACHL", "CIP23BACHL", "CIP24BACHL", "CIP25BACHL", "CIP26BACHL", "CIP27BACHL", "CIP29BACHL", "CIP30BACHL", "CIP31BACHL", "CIP38BACHL", "CIP39BACHL", "CIP40BACHL", "CIP41BACHL", "CIP42BACHL", "CIP43BACHL", "CIP44BACHL", "CIP45BACHL", "CIP46BACHL", "CIP47BACHL", "CIP48BACHL", "CIP49BACHL", "CIP50BACHL", "CIP51BACHL", "CIP52BACHL", "CIP54BACHL", "NPT4_PUB", "NPT41_PUB", "NPT42_PUB", "NPT43_PUB", "NPT44_PUB", "NPT45_PUB", "NPT4_048_PUB", "NPT4_3075_PUB", "NPT4_75UP_PUB", "NUM4_PUB", "NUM41_PUB", "NUM42_PUB", "NUM43_PUB", "NUM44_PUB", "NUM45_PUB", "PCTPELL", "C150_4", "D150_4", "C150_4_NRA", "PCTFLOAN", "COMPL_RPY_1YR_RT", "FEMALE_RPY_1YR_RT", "MALE_RPY_1YR_RT", "COMPL_RPY_3YR_RT", "FEMALE_RPY_3YR_RT", "MALE_RPY_3YR_RT", "COMPL_RPY_5YR_RT", "FEMALE_RPY_5YR_RT", "MALE_RPY_5YR_RT", "GRAD_DEBT_MDN", "WDRAW_DEBT_MDN", "LO_INC_DEBT_MDN", "MD_INC_DEBT_MDN", "HI_INC_DEBT_MDN", "DEP_DEBT_MDN", "IND_DEBT_MDN", "PELL_DEBT_MDN", "NOPELL_DEBT_MDN", "FEMALE_DEBT_MDN", "MALE_DEBT_MDN", "FIRSTGEN_DEBT_MDN", "NOTFIRSTGEN_DEBT_MDN", "DEBT_N", "GRAD_DEBT_N", "WDRAW_DEBT_N", "LO_INC_DEBT_N", "MD_INC_DEBT_N", "HI_INC_DEBT_N", "DEP_DEBT_N", "IND_DEBT_N", "PELL_DEBT_N", "NOPELL_DEBT_N", "FEMALE_DEBT_N", "MALE_DEBT_N", "FIRSTGEN_DEBT_N", "NOTFIRSTGEN_DEBT_N", "FEMALE_RPY_1YR_N", "MALE_RPY_1YR_N", "FEMALE_RPY_3YR_N", "MALE_RPY_3YR_N", "FEMALE_RPY_5YR_N", "MALE_RPY_5YR_N", "MN_EARN_WNE_INDEP0_P6", "MN_EARN_WNE_INDEP1_P6", "MN_EARN_WNE_MALE0_P6", "MN_EARN_WNE_MALE1_P6", "GRAD_DEBT_MDN_SUPP", "FEMALE_RPY_3YR_RT_SUPP", "MALE_RPY_3YR_RT_SUPP", "C100_4", "D150_4_WHITE", "D150_4_BLACK", "D150_4_HISP", "D150_4_ASIAN", "D150_4_AIAN", "D150_4_NHPI", "D150_4_2MOR", "D150_4_NRA", "D150_4_UNKN", "Year", "FEMALE_RPY_3YR_RT_SUPP","MALE_RPY_3YR_RT_SUPP", "DEBT_MDN_SUPP", "MD_EARN_WNE_P10", "MD_EARN_WNE_P6", "MD_EARN_WNE_P8", "GRADS", "UG")]
 ```
 
 ```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
 combined <- rbind(MERGED2016_17_PP, MERGED2015_16_PP, MERGED2014_15_PP, MERGED2013_14_PP, MERGED2012_13_PP)
-
- # Removes the individual years
-rm(MERGED2016_17_PP, MERGED2015_16_PP, MERGED2014_15_PP, MERGED2013_14_PP, MERGED2012_13_PP)
-# Counts the number of "n/a" exist in each column of the final data frame, IPEDS
-combined_na_count <- sapply(combined, function(x) sum(is.na(x)))
-combined_na_count <- as.data.frame.list(combined_na_count)
-# Moves the data from wide to long:
-library(reshape2)
-combined_na_count <- melt(combined_na_count)
- # Writes a text file to working directory 
+# Removes the individual years
+rm(MERGED2016_17_PP, MERGED2015_16_PP, MERGED2014_15_PP, MERGED2013_14_PP, MERGED2012_13_PP, bigten)
+# Dividing Institutions into two groups--Maryland or Not Maryland.
+combined$group <- ifelse(combined$UNITID==163286, "MD", "Not MD")
+# Writes a text file to working directory 
  write.table(combined,"combined_college_scorecards.txt",sep="\t",row.names=FALSE)
- ```
- ```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
- # Some Descriptive Analytics and a visualization by Laura Walker
+```
  
-college_scorecards <-read.csv(text=getURL("https://raw.githubusercontent.com/annlaurawalker/INFM_600/edits_descriptive/FinalDataset.csv"), header=T)
-
-college_scorecards$group <- ifelse(college_scorecards$UNITID==163286, "MD", "Not MD")
-
-
-md <- subset(college_scorecards, UNITID==163286)
-
-md_repayment <- md[,c("Year", "DEP_DEBT_MDN", "FEMALE_DEBT_MDN", "GRAD_DEBT_MDN", "IND_DEBT_MDN", "MALE_DEBT_MDN", "MD_INC_DEBT_MDN", "NOPELL_DEBT_MDN", "NOTFIRSTGEN_DEBT_MDN", "PELL_DEBT_MDN", "WDRAW_DEBT_MDN")]
-
+```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
+# Some Descriptive Analytics and a visualization by Laura Walker
+md <- subset(combined, UNITID==163286)
+md_repayment <- md[,c("Year", "GRAD_DEBT_MDN", "WDRAW_DEBT_MDN", "FIRSTGEN_DEBT_MDN", "NOTFIRSTGEN_DEBT_MDN", "MD_INC_DEBT_MDN", "PELL_DEBT_MDN", "NOPELL_DEBT_MDN")]
 # wide to long
-md_long <- gather(md_repayment, variable, md_value, DEP_DEBT_MDN:WDRAW_DEBT_MDN, factor_key=TRUE)
-
+md_long <- gather(md_repayment, variable, md_value, GRAD_DEBT_MDN:NOPELL_DEBT_MDN, factor_key=TRUE)
 # primary key to merge
 md_long$pk <- paste(md_long$Year,"-",md_long$variable,sep="")
-
 # getting min for some repayment variables by year
-min <- college_scorecards %>% group_by(Year) %>% summarise_each(funs(min), DEP_DEBT_MDN, FEMALE_DEBT_MDN, GRAD_DEBT_MDN, IND_DEBT_MDN, MALE_DEBT_MDN, MD_INC_DEBT_MDN, NOPELL_DEBT_MDN, NOTFIRSTGEN_DEBT_MDN, PELL_DEBT_MDN, WDRAW_DEBT_MDN)
-
+min <- combined %>% group_by(Year) %>% summarise_each(funs(min),GRAD_DEBT_MDN, WDRAW_DEBT_MDN, FIRSTGEN_DEBT_MDN, NOTFIRSTGEN_DEBT_MDN, MD_INC_DEBT_MDN, PELL_DEBT_MDN, NOPELL_DEBT_MDN)
 # wide to long
-min_long <- gather(min, variable, min_value, DEP_DEBT_MDN:WDRAW_DEBT_MDN, factor_key=TRUE)
-
+min_long <- gather(min, variable, min_value, GRAD_DEBT_MDN:NOPELL_DEBT_MDN, factor_key=TRUE)
 # primary key to merge
 min_long$pk <- paste(min_long$Year,"-",min_long$variable,sep="")
-
 # getting max for some repayment variables by year
-max <- college_scorecards %>% group_by(Year) %>% summarise_each(funs(max), DEP_DEBT_MDN, FEMALE_DEBT_MDN, GRAD_DEBT_MDN, IND_DEBT_MDN, MALE_DEBT_MDN, MD_INC_DEBT_MDN, NOPELL_DEBT_MDN, NOTFIRSTGEN_DEBT_MDN, PELL_DEBT_MDN, WDRAW_DEBT_MDN)
+max <- combined %>% group_by(Year) %>% summarise_each(funs(max), GRAD_DEBT_MDN, WDRAW_DEBT_MDN, FIRSTGEN_DEBT_MDN, NOTFIRSTGEN_DEBT_MDN, MD_INC_DEBT_MDN, PELL_DEBT_MDN, NOPELL_DEBT_MDN)
 # wide to long
-max_long <- gather(max, variable, max_value, DEP_DEBT_MDN:WDRAW_DEBT_MDN, factor_key=TRUE)
+max_long <- gather(max, variable, max_value, GRAD_DEBT_MDN:NOPELL_DEBT_MDN, factor_key=TRUE)
 # primary key to merge
 max_long$pk <- paste(max_long$Year,"-",max_long$variable,sep="")
-
 # getting mean for some repayment variables by year
-mean <- college_scorecards %>% group_by(Year) %>% summarise_each(funs(mean), DEP_DEBT_MDN, FEMALE_DEBT_MDN, GRAD_DEBT_MDN, IND_DEBT_MDN, MALE_DEBT_MDN, MD_INC_DEBT_MDN, NOPELL_DEBT_MDN, NOTFIRSTGEN_DEBT_MDN, PELL_DEBT_MDN, WDRAW_DEBT_MDN)
-
+mean <- combined %>% group_by(Year) %>% summarise_each(funs(max), GRAD_DEBT_MDN, WDRAW_DEBT_MDN, FIRSTGEN_DEBT_MDN, NOTFIRSTGEN_DEBT_MDN, MD_INC_DEBT_MDN, PELL_DEBT_MDN, NOPELL_DEBT_MDN)
 #wide to long
-mean_long <- gather(mean, variable, mean_value, DEP_DEBT_MDN:WDRAW_DEBT_MDN, factor_key=TRUE)
-
+mean_long <- gather(mean, variable, mean_value, GRAD_DEBT_MDN:NOPELL_DEBT_MDN, factor_key=TRUE)
 # primary key to merge
 mean_long$pk <- paste(mean_long$Year,"-",mean_long$variable,sep="")
-
-
 # Merging data frames into one
 # merge with min
 repayment <- merge(x=md_long, y=min_long, by.x="pk", by.y="pk", all.x = TRUE)
 # remove redundant fields
 repayment <- subset(repayment, select = -c(Year.y, variable.y))
-
 # merge with max
 repayment <- merge(x=repayment, y=max_long, by.x="pk", by.y="pk", all.x = TRUE)
 # remove redundant fields
 repayment <- subset(repayment, select = -c(Year, variable))
-
 # merge with mean
 repayment <- merge(x=repayment, y=mean_long, by.x="pk", by.y="pk", all.x = TRUE)
 # remove redundant fields
 repayment <- subset(repayment, select = -c(Year, variable, pk))
-
 names(repayment) <- c("Year", "Variable", "Maryland_Value", "Big_Ten_Min", "Big_Ten_Max", "Big_Ten_Mean")
 # Sorting the Dataframe by last Variable then Year
 repayment <- repayment[ order(repayment$Variable, (repayment$Year)), ]
-
-rm(max, max_long, md_repayment, mean, mean_long, min, min_long)
-
+rm(max, max_long, md_repayment, mean, mean_long, min, min_long, md_long, md)
 # Reorder by column name
 repayment <- repayment[c("Variable", "Year", "Maryland_Value", "Big_Ten_Min", "Big_Ten_Max", "Big_Ten_Mean")]
 
-# Visualization
-
-recent <- subset(college_scorecards, Year=="2016-17")
-recent <- recent[,c("INSTNM", "Year", "group", "FEMALE_DEBT_MDN", "MALE_DEBT_MDN")]
-library(ggplot2)
-
-manual_colors <- c("#AF272F","#101820") 
-
-vis_scatter <- ggplot(recent, aes(x=MALE_DEBT_MDN, y=FEMALE_DEBT_MDN, color=str_wrap(group,20))) + geom_point() +  labs(title = "Median Debt by Gender", subtitle = "Comparing University of MD, College Park to the Rest of the Big Ten Institutions", caption = "College Scorecard, 2016-17", x = "Median Male Debt", y = "Median Female Debt") + theme(plot.title = element_text(hjust = 0.5)) + scale_y_continuous(breaks = seq(10000, 25000, by=5000), limits=c(10000,25000))+ scale_x_continuous(breaks = seq(10000, 25000, by=5000), limits=c(10000,25000)) + theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) + labs(color = "Grouping")+ scale_color_manual(values = manual_colors)+ geom_point(size = 4) + theme(plot.title = element_text(hjust = 0.5)) 
-vis_scatter
-
-To see what this visualization looks like, please visit https://github.com/annlaurawalker/INFM_600/wiki/Sample-Visualizations
-
 ```
- 
- 
+
+
+```{r, fig.width=12,fig.height=9}
+### VISUALIZATION # 1--Debt by Gender and First Generation Status
+
+# Extracting data to get the most recent scorecard from 2016-17
+recent <- subset(combined, Year=="2016-17")
+
+# Extracting just the columns needed for this visualization
+recent <- recent[,c("name", "Year", "group", "FEMALE_DEBT_MDN", "MALE_DEBT_MDN", "DEBT_MDN_SUPP", "MD_EARN_WNE_P10", "MD_EARN_WNE_P6", "MD_EARN_WNE_P8", "NOTFIRSTGEN_DEBT_MDN", "FIRSTGEN_DEBT_MDN")]
+
+# Turning the debt variables into numeric ones. 
+recent$FEMALE_DEBT_MDN <- as.numeric(as.character(recent$FEMALE_DEBT_MDN))
+recent$MALE_DEBT_MDN <- as.numeric(as.character(recent$MALE_DEBT_MDN))
+recent$NOTFIRSTGEN_DEBT_MDN <- as.numeric(as.character(recent$NOTFIRSTGEN_DEBT_MDN))
+recent$FIRSTGEN_DEBT_MDN <- as.numeric(as.character(recent$FIRSTGEN_DEBT_MDN))
+
+# Visualizations
+vis_scatter_gender <- ggplot(recent, aes(x=MALE_DEBT_MDN, y=FEMALE_DEBT_MDN, color=str_wrap(group,20))) + geom_point() +  labs(title = "Median Debt by Gender", subtitle = "Comparing University of MD, College Park to the Rest of the Big Ten Institutions", caption = "College Scorecard, 2016-17", x = "Median Male Debt", y = "Median Female Debt") + theme(plot.title = element_text(hjust = 0.5)) + scale_y_continuous(breaks = seq(10000, 25000, by=5000), limits=c(10000,25000), labels = dollar)+ scale_x_continuous(breaks = seq(10000, 25000, by=5000), limits=c(10000,25000), labels = dollar) + theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) + scale_color_manual(values = manual_colors) + labs(color = "Grouping")+ geom_point(size = 4) + theme(plot.title = element_text(hjust = 0.5)) +  guides(fill=guide_legend(title=""))
+vis_scatter_gender
+
+vis_scatter_generation <- ggplot(recent, aes(x=NOTFIRSTGEN_DEBT_MDN, y=FIRSTGEN_DEBT_MDN, color=str_wrap(group,20))) + geom_point() +  labs(title = "Median Debt by First-Generation Status", subtitle = "Comparing University of MD, College Park to the Rest of the Big Ten Institutions", caption = "College Scorecard, 2016-17", x = "Median Debt for Non-First-Generation Students", y = "Median Debt for First-Generation Studentst") + theme(plot.title = element_text(hjust = 0.5)) + scale_y_continuous(breaks = seq(10000, 25000, by=5000), limits=c(10000,25000), labels = dollar)+ scale_x_continuous(breaks = seq(10000, 25000, by=5000), limits=c(10000,25000), labels = dollar) + theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) + scale_color_manual(values = manual_colors) + labs(color = "Grouping")+ geom_point(size = 4) + theme(plot.title = element_text(hjust = 0.5)) +  guides(fill=guide_legend(title=""))
+vis_scatter_generation
+```
+```{r, fig.width=12,fig.height=9}
+### VISUALIZATION # 2--Debt to Earnings Comparison
+
+# Extracting Data for just 2014-15 (the last year for which we have data for these variables)
+recent_debt <- subset(combined, Year=="2014-15")
+
+# Extracting just the columns needed for this visualization
+recent_debt <- recent_debt[,c("name", "Year", "group", "DEBT_MDN_SUPP", "MD_EARN_WNE_P10", "MD_EARN_WNE_P6", "MD_EARN_WNE_P8")]
+
+# Turning the debt variables into numeric ones. 
+recent_debt$DEBT_MDN_SUPP <- as.numeric(as.character(recent_debt$DEBT_MDN_SUPP))
+recent_debt$MD_EARN_WNE_P10 <- as.numeric(as.character(recent_debt$MD_EARN_WNE_P10))
+recent_debt$MD_EARN_WNE_P8 <- as.numeric(as.character(recent_debt$MD_EARN_WNE_P8))
+recent_debt$MD_EARN_WNE_P6 <- as.numeric(as.character(recent_debt$MD_EARN_WNE_P6))
+
+# Converting data from wide to long
+recent_debt_long <- melt(recent_debt, id.vars=c("name", "Year", "group", "DEBT_MDN_SUPP"))
+
+# Ifelse to make better facet names
+recent_debt_long$variable_v2 <- ifelse(recent_debt_long$variable=="MD_EARN_WNE_P10", "Earnings Ten Years after Last Enrollment", ifelse(recent_debt_long$variable=="MD_EARN_WNE_P8", "Earnings Eight Years after Last Enrollment", "Earnings Six Years after Last Enrollment"))
+
+# Ordering Categoric Variables
+recent_debt_long$variable_v2 = factor(recent_debt_long$variable_v2, levels=c('Earnings Six Years after Last Enrollment','Earnings Eight Years after Last Enrollment','Earnings Ten Years after Last Enrollment'))
+
+# Getting Median values per variable & debts
+recent_debt_long <- recent_debt_long %>% group_by(variable_v2) %>%  mutate(mean = mean(value))
+recent_debt_long <- recent_debt_long %>% group_by(variable_v2) %>%  mutate(mean_debt = mean(DEBT_MDN_SUPP))
+
+# Visualization
+vis_scatter_debt_to_earnings_all <- ggplot(recent_debt_long, aes(x=DEBT_MDN_SUPP, y=value, color=str_wrap(group,20))) + geom_point() +  labs(title = "Debt to Earnings Comparison", subtitle = "", caption = "College Scorecard, 2014-15", x = "Median Debt", y = "Median Earnings After Last Enrollment") + theme(plot.title = element_text(hjust = 0.5)) + scale_y_continuous(limits=c(35000,70000), labels = dollar)+ scale_x_continuous(limits=c(12000, 21000), labels = dollar) + theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) + labs(color = "Grouping")+ scale_color_manual(values = manual_colors)+ geom_point(size = 4) + theme(plot.title = element_text(hjust = 0.5)) +  guides(fill=guide_legend(title=""))+ facet_wrap(~variable_v2, labeller = label_wrap_gen(multi_line = TRUE), scales="free", ncol=1) +  geom_hline(aes(yintercept = mean, group = variable), colour = "#AF272F") +  geom_vline(aes(xintercept = mean_debt, group = variable), colour = "#AF272F")
+
+vis_scatter_debt_to_earnings_all
+```
+```{r, fig.width=12,fig.height=9}
+### VISUALIZATION # 3--Median Debts by Specific Populations
+
+# Extracting data to get the most recent scorecard from 2016-17
+debt_spec_pop <- subset(combined, Year=="2016-17")
+
+# Extracting just the columns needed for this visualization
+debt_spec_pop <- combined[,c("Year", "name", "group", "GRAD_DEBT_MDN", "WDRAW_DEBT_MDN", "FIRSTGEN_DEBT_MDN", "NOTFIRSTGEN_DEBT_MDN", "MD_INC_DEBT_MDN", "PELL_DEBT_MDN", "NOPELL_DEBT_MDN")]
+
+# Converting data from wide to long
+debt_spec_pop <- melt(debt_spec_pop, id.vars=c("Year", "name", "group"))
+
+# Ifelse to make better variable names
+debt_spec_pop$new_var <- ifelse(debt_spec_pop$variable =="GRAD_DEBT_MDN", "Students Who Completed", ifelse(debt_spec_pop$variable =="WDRAW_DEBT_MDN", "Students Who Haven't Completed", ifelse(debt_spec_pop$variable =="FIRSTGEN_DEBT_MDN", "First-Generation Students", ifelse(debt_spec_pop$variable =="NOTFIRSTGEN_DEBT_MDN", "Non-First-Generation Students", ifelse(debt_spec_pop$variable =="MD_INC_DEBT_MDN", "Low-Income Students", ifelse(debt_spec_pop$variable =="PELL_DEBT_MDN", "Pell Students", "Non-Pell Students"))))))
+
+# Creating line breaks for variables
+labels <- c("Students\n Who Completed", "Students Who \nHaven't Completed", "First-\nGeneration \nStudents\n   ", "Non-First-\nGeneration \nStudents\n", "Low-Income \nStudents", "Pell \nStudents", "Non-Pell \nStudents")
+
+# Turning the debt variables into numeric ones. 
+debt_spec_pop$value <- as.numeric(as.character(debt_spec_pop$value))
+
+# Visualization
+debt_spec_pop_vis <- ggplot(debt_spec_pop, aes(value, new_var)) + geom_point(aes(color = group), size = 4) + scale_color_manual(values = manual_colors) + scale_y_discrete(labels= labels) + labs(title = "Median Debts by Specific Populations", subtitle = "College Scorecard, 2016-2017", caption = "", x = "", y = "Variable") + theme(text = element_text(size=16)) + theme(legend.position="bottom")
+```
+```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
+### VISUALIZATION # 4--Repayment Rate by Gender
+# Visualizations done by Himanshi Manglunia
+repayment_df <- combined[,c( "name", "Year", "FEMALE_RPY_3YR_RT_SUPP","MALE_RPY_3YR_RT_SUPP")]
+
+# Converting data from wide to long
+repayment_df <- melt(repayment_df, id.vars=c("name", "Year"))
+
+# Ifelse to make better variable names
+repayment_df$gender <- ifelse(repayment_df$variable=="FEMALE_RPY_3YR_RT_SUPP", "Female", "Male")
+repayment_df$Year_Short <- ifelse(repayment_df$Year== "2016-17", 2017, ifelse(repayment_df$Year== "2015-16", 2016, ifelse(repayment_df$Year== "2014-15", "2015", ifelse(completion_rates_df_long$Year== "2013-14", 2014, 2013))))
+
+# Turning the debt variables into numeric ones. 
+repayment_df$value <- as.numeric(as.character(repayment_df$value))
+
+# Visualization
+repayment <-ggplot(repayment_df, aes(factor(Year_Short), value, fill = factor(gender))) + geom_bar(stat="identity", position = "dodge") + labs(title = "Repayment Rate by Gender", subtitle = "", caption = "College Scorecards, 2012-2013 to 2016-2017", x = "Year", y = "Total") + facet_wrap(~name, labeller = label_wrap_gen(multi_line = TRUE), scales="free", ncol=3) +  guides(fill=guide_legend(title="Gender"))
+repayment
+```
+
+```{r, fig.width=12,fig.height=9}
+### VISUALIZATION # 5--Repayment Rate by Gender
+# constructing a data frame of completion for non-white students
+completion_rates_df <- combined[,c("name","Year",  "D150_4_2MOR", "D150_4_AIAN", "D150_4_ASIAN", "D150_4_BLACK", "D150_4_HISP", "D150_4_NHPI", "D150_4_NRA", "D150_4_UNKN")]
+
+# making data wide to long
+completion_rates_df_long <- gather(completion_rates_df, variable, value, D150_4_2MOR:D150_4_UNKN, factor_key=TRUE)
+
+# classifying races into Underrepresented minority groups. 
+completion_rates_df_long$URM <- ifelse(completion_rates_df_long$variable== "D150_4_UNKN", "Unknown", ifelse(completion_rates_df_long$variable== "D150_4_NRA", "Foreign", ifelse(completion_rates_df_long$variable== "D150_4_ASIAN" |completion_rates_df_long$variable== "D150_4_2MOR", "Other Minority", "Under-Represented Minority")))
+
+# creating a new field for a shortened year
+completion_rates_df_long$Year_Short <- ifelse(completion_rates_df_long$Year== "2016-17", 2017, ifelse(completion_rates_df_long$Year== "2015-16", 2016, ifelse(completion_rates_df_long$Year== "2014-15", "2015", ifelse(completion_rates_df_long$Year== "2013-14", 2014, 2013))))
+
+# ggthemr theme establishment  more information on this package can be found here: https://github.com/cttobin/ggthemr 
+ggthemr('fresh')
+
+# organization of fields
+completion_rates_df_long$URM <- factor(completion_rates_df_long$URM, levels=c("Unknown", "Other Minority", "Foreign", "Under-Represented Minority"))
+
+completion_rates_df_long$value <- as.numeric(as.character(completion_rates_df_long$value))
+
+completion_rates_vis <-ggplot(completion_rates_df_long,   aes(x=Year_Short, y=value, fill=URM)) + geom_bar(stat="identity", position = "fill") + scale_y_continuous(labels = percent_format()) + theme_bw() + labs(title = "Non-White Completion Breakdown", subtitle = "", caption = "College Scorecards, 2012-2013 to 2016-2017", x = "Year", y = "Total") + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) + facet_wrap(~name, labeller = label_wrap_gen(multi_line = TRUE), scales="free", ncol=3)+ guides(fill=guide_legend(title="Minority Type"))
+
+completion_rates_vis
+
+#To see what this visualization looks like, please visit https://github.com/annlaurawalker/INFM_600/wiki/Sample-Visualizations
+```
+
+
 ```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
  # Predictive Analytics by Himanshi Manglunia & Kalpita Raut
  #Installing packages - one time
-install.packages("dplyr")
-install.packages("mvnormtest")
-install.packages("pwr")
-install.packages("sm")
 
 #### INFM 600 Project ####
 FinalDataset <- read.csv(text=getURL("https://raw.githubusercontent.com/annlaurawalker/INFM_600/edits_descriptive/FinalDataset.csv"), header=T)
@@ -174,7 +259,6 @@ require(dplyr)
 require(mvnormtest)
 require(pwr)
 require(sm)
-
 #separating variables into different datasets
 INSTNM <- as.factor(FinalDataset[,1])
 YEAR <- as.factor(FinalDataset[,3])
@@ -193,7 +277,6 @@ NPT44_PUB       <- as.matrix(FinalDataset[,16])
 NPT45_PUB       <- as.matrix(FinalDataset[,17])
 head(INSTNM)
 head(YEAR)
-
 #create R objects for the residuals from each treatment level
 resC100_4		   =lm(FinalDataset$C100_4~FinalDataset$INSTNM)$residuals
 resC150_4          =lm(FinalDataset$C150_4~FinalDataset$INSTNM)$residuals
@@ -208,32 +291,23 @@ resPCTFLOAN        =lm(FinalDataset$PCTFLOAN~FinalDataset$INSTNM)$residuals
 #resNPT43_PUB       =lm(FinalDataset$NPT43_PUB~FinalDataset$INSTNM)$residuals
 #resNPT44_PUB       =lm(FinalDataset$NPT44_PUB~FinalDataset$INSTNM)$residuals
 #resNPT45_PUB       =lm(FinalDataset$NPT45_PUB~FinalDataset$INSTNM)$residuals
-
 #checking for normality using qqplots
 qqnorm(lm(FinalDataset$C100_4~FinalDataset$INSTNM)$residuals, main="resC100_4		   ", col=4)
 qqline(lm(FinalDataset$C100_4~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
-
 qqnorm(lm(FinalDataset$C150_4~FinalDataset$INSTNM)$residuals, main="resC150_4          ", col=4)
 qqline(lm(FinalDataset$C150_4~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
-
 qqnorm(lm(FinalDataset$D150_4~FinalDataset$INSTNM)$residuals, main="resD150_4          ", col=4)
 qqline(lm(FinalDataset$D150_4~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
-
 qqnorm(lm(FinalDataset$COMPL_RPY_3YR_RT~FinalDataset$INSTNM)$residuals, main="resCOMPL_RPY_3YR_RT", col=4)
 qqline(lm(FinalDataset$COMPL_RPY_3YR_RT~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
-
 qqnorm(lm(FinalDataset$COMPL_RPY_5YR_RT~FinalDataset$INSTNM)$residuals, main="resCOMPL_RPY_5YR_RT", col=4)
 qqline(lm(FinalDataset$COMPL_RPY_5YR_RT~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
-
 qqnorm(lm(FinalDataset$DEBT_N~FinalDataset$INSTNM)$residuals, main="resDEBT_N          ", col=4)
 qqline(lm(FinalDataset$DEBT_N~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
-
 qqnorm(lm(FinalDataset$DEP_DEBT_MDN~FinalDataset$INSTNM)$residuals, main="resDEP_DEBT_MDN    ", col=4)
 qqline(lm(FinalDataset$DEP_DEBT_MDN~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
-
 qqnorm(lm(FinalDataset$PCTFLOAN~FinalDataset$INSTNM)$residuals, main="resPCTFLOAN        ", col=4)
 qqline(lm(FinalDataset$PCTFLOAN~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
-
 #qqnorm(lm(FinalDataset$NPT41_PUB~FinalDataset$INSTNM)$residuals, main="resNPT41_PUB       ", col=4)
 #qqline(lm(FinalDataset$NPT41_PUB~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
 #
@@ -248,8 +322,6 @@ qqline(lm(FinalDataset$PCTFLOAN~FinalDataset$INSTNM)$residuals, lwd=2,col='gray8
 #
 #qqnorm(lm(FinalDataset$NPT45_PUB~FinalDataset$INSTNM)$residuals, main="resNPT45_PUB       ", col=4)
 #qqline(lm(FinalDataset$NPT45_PUB~FinalDataset$INSTNM)$residuals, lwd=2,col='gray86')
-
-
 #manova test
 x <- manova(cbind(
   FinalDataset$C100_4			 ,
@@ -266,68 +338,9 @@ x <- manova(cbind(
   FinalDataset$NPT44_PUB       ,
   FinalDataset$NPT45_PUB       
 ) ~ FinalDataset$INSTNM, data = FinalDataset)
-
 #running wilks test
 summary(x,test="Wilks")
-
 #difference between the response vars
 summary.aov(x)
 ```
-# Visualizations done by Laura Walker
-college_scorecards <-read.csv(text=getURL("https://raw.githubusercontent.com/annlaurawalker/INFM_600/edits_descriptive/FinalDataset.csv"), header=T)
 
-# constructing a data frame of completion for non-white students
-completion_rates <- college_scorecards[,c("INSTNM","Year",  "D150_4_2MOR", "D150_4_AIAN", "D150_4_ASIAN", "D150_4_BLACK", "D150_4_HISP", "D150_4_NHPI", "D150_4_NRA", "D150_4_UNKN")]
-
-# making data wide to long
-completion_rates_long <- gather(completion_rates, variable, value, D150_4_2MOR:D150_4_UNKN, factor_key=TRUE)
-
-# classifying races into Underrepresented minority groups. 
-completion_rates_long$URM <- ifelse(completion_rates_long$variable== "D150_4_UNKN", "Unknown", ifelse(completion_rates_long$variable== "D150_4_NRA", "Foreign", ifelse(completion_rates_long$variable== "D150_4_ASIAN" |completion_rates_long$variable== "D150_4_2MOR", "Other Minority", "Under-Represented Minority")))
-
-
-# creating a new field for a shortened year
-completion_rates_long$Year_Short <- ifelse(completion_rates_long$Year== "2016-17", 2017, ifelse(completion_rates_long$Year== "2015-16", 2016, ifelse(completion_rates_long$Year== "2014-15", "2015", ifelse(completion_rates_long$Year== "2013-14", 2014, 2013))))
-
-vis_stacked <-ggplot(completion_rates_long,   aes(x=Year_Short, y=value, fill=str_wrap(URM, 20))) + geom_bar(stat="identity", position = "fill") + scale_y_continuous(labels = percent_format()) + theme_bw() + labs(title = "Non-White Completion Breakdown", subtitle = "", caption = "College Scorecards, 2012-2013 to 2016-2017", x = "Year", y = "Total") + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) + facet_wrap(~INSTNM, labeller = label_wrap_gen(multi_line = TRUE), scales="free", ncol=3) +scale_fill_brewer(palette="Set3") 
-
-To see what this visualization looks like, please visit https://github.com/annlaurawalker/INFM_600/wiki/Sample-Visualizations
-```
-```
-# Visualizations done by Himanshi Manglunia
-# Read data
-data = read.csv("C:/Users/himan/Downloads/INFM600/combined_college_scorecards.csv")
-data_repayment = data[,c( "INSTNM",
-                         "FEMALE_RPY_3YR_RT_SUPP",
-                        "MALE_RPY_3YR_RT_SUPP")]
-
-data_gender_rpy_m = data.frame(data_repayment$INSTNM, data_repayment$MALE_RPY_3YR_RT_SUPP, "Male")
-colnames(data_gender_rpy_m) <- c("Institute_name", "Repayment_rate", "Gender")
-data_gender_rpy_f = data.frame(data_repayment$INSTNM, data_repayment$FEMALE_RPY_3YR_RT_SUPP, "Female")
-colnames(data_gender_rpy_f) <- c("Institute_name", "Repayment_rate", "Gender")
-data_repayment = rbind(data_gender_rpy_m, data_gender_rpy_f)
-
-data_repayment
-aggdata <- aggregate(data_repayment, by=list(data_repayment$Institute_name, data_repayment$Gender), FUN=mean)
-aggdata
-data_repayment = data.frame(aggdata$Group.1,aggdata$Repayment_rate, aggdata$Group.2)
-colnames(data_repayment) <- c("Institute_name", "Repayment_rate", "Gender")
-data_repayment
-
-library(ggplot2)
-library(ggthemes)
-options(scipen = 999)  # turns of scientific notations like 1e+40
-
-# X Axis Breaks and Labels 
-brks <- seq(-15000000, 15000000, 5000000)
-lbls = paste0(as.character(c(seq(15, 0, -5), seq(5, 15, 5))), "m")
-
-# Plot
-ggplot(data_repayment, aes(x = Institute_name, y = Repayment_rate, fill = Gender)) +   # Fill column
-  geom_bar(stat = "identity", width = .6) +   # draw the bars
-  coord_flip() +  # Flip axes
-  labs(title="Repayment rate by Gender") +
-  theme_tufte() +  # Tufte theme from ggfortify
-  theme(plot.title = element_text(hjust = .5), 
-        axis.ticks = element_blank()) +   # Centre plot title
-  scale_fill_brewer(palette = "Dark2")  # Color palette
