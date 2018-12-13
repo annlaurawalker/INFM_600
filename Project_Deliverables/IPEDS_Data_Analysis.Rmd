@@ -201,7 +201,7 @@ debt_spec_pop$value <- as.numeric(as.character(debt_spec_pop$value))
 # Visualization
 debt_spec_pop_vis <- ggplot(debt_spec_pop, aes(value, new_var)) + geom_point(aes(color = group), size = 4) + scale_color_manual(values = manual_colors) + scale_y_discrete(labels= labels) + labs(title = "Median Debts by Specific Populations", subtitle = "College Scorecard, 2016-2017", caption = "", x = "", y = "Variable") + theme(text = element_text(size=16)) + theme(legend.position="bottom")
 ```
-```{r message=FALSE, cache=FALSE, echo=FALSE, warning=FALSE}
+```{r, fig.width=12,fig.height=9}
 ### VISUALIZATION # 4--Repayment Rate by Gender
 # Visualizations done by Himanshi Manglunia
 repayment_df <- combined[,c( "name", "Year", "FEMALE_RPY_3YR_RT_SUPP","MALE_RPY_3YR_RT_SUPP")]
