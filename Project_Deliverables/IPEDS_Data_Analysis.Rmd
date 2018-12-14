@@ -144,6 +144,7 @@ vis_scatter_gender
 vis_scatter_generation <- ggplot(recent, aes(x=NOTFIRSTGEN_DEBT_MDN, y=FIRSTGEN_DEBT_MDN, color=str_wrap(group,20))) + geom_point() +  labs(title = "Median Debt by First-Generation Status", subtitle = "Comparing University of MD, College Park to the Rest of the Big Ten Institutions", caption = "College Scorecard, 2016-17", x = "Median Debt for Non-First-Generation Students", y = "Median Debt for First-Generation Studentst") + theme(plot.title = element_text(hjust = 0.5)) + scale_y_continuous(breaks = seq(10000, 25000, by=5000), limits=c(10000,25000), labels = dollar)+ scale_x_continuous(breaks = seq(10000, 25000, by=5000), limits=c(10000,25000), labels = dollar) + theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) + scale_color_manual(values = manual_colors) + labs(color = "Grouping")+ geom_point(size = 4) + theme(plot.title = element_text(hjust = 0.5)) +  guides(fill=guide_legend(title=""))
 vis_scatter_generation
 ```
+
 ```{r, fig.width=12,fig.height=9}
 ### VISUALIZATION # 2--Debt to Earnings Comparison
 
@@ -177,6 +178,7 @@ vis_scatter_debt_to_earnings_all <- ggplot(recent_debt_long, aes(x=DEBT_MDN_SUPP
 
 vis_scatter_debt_to_earnings_all
 ```
+
 ```{r, fig.width=12,fig.height=9}
 ### VISUALIZATION # 3--Median Debts by Specific Populations
 
@@ -200,7 +202,9 @@ debt_spec_pop$value <- as.numeric(as.character(debt_spec_pop$value))
 
 # Visualization
 debt_spec_pop_vis <- ggplot(debt_spec_pop, aes(value, new_var)) + geom_point(aes(color = group), size = 4) + scale_color_manual(values = manual_colors) + scale_y_discrete(labels= labels) + labs(title = "Median Debts by Specific Populations", subtitle = "College Scorecard, 2016-2017", caption = "", x = "", y = "Variable") + theme(text = element_text(size=16)) + theme(legend.position="bottom")
+debt_spec_pop_vis
 ```
+
 ```{r, fig.width=12,fig.height=9}
 ### VISUALIZATION # 4--Repayment Rate by Gender
 # Visualizations done by Himanshi Manglunia
@@ -211,13 +215,13 @@ repayment_df <- melt(repayment_df, id.vars=c("name", "Year"))
 
 # Ifelse to make better variable names
 repayment_df$gender <- ifelse(repayment_df$variable=="FEMALE_RPY_3YR_RT_SUPP", "Female", "Male")
-repayment_df$Year_Short <- ifelse(repayment_df$Year== "2016-17", 2017, ifelse(repayment_df$Year== "2015-16", 2016, ifelse(repayment_df$Year== "2014-15", "2015", ifelse(completion_rates_df_long$Year== "2013-14", 2014, 2013))))
+repayment_df$Year_Short <- ifelse(repayment_df$Year== "2016-17", 2017, ifelse(repayment_df$Year== "2015-16", 2016, ifelse(repayment_df$Year== "2014-15", "2015", ifelse(repayment_df$Year== "2013-14", 2014, 2013))))
 
 # Turning the debt variables into numeric ones. 
 repayment_df$value <- as.numeric(as.character(repayment_df$value))
 
 # Visualization
-repayment <-ggplot(repayment_df, aes(factor(Year_Short), value, fill = factor(gender))) + geom_bar(stat="identity", position = "dodge") + labs(title = "Repayment Rate by Gender", subtitle = "", caption = "College Scorecards, 2012-2013 to 2016-2017", x = "Year", y = "Total") + facet_wrap(~name, labeller = label_wrap_gen(multi_line = TRUE), scales="free", ncol=3) +  guides(fill=guide_legend(title="Gender"))
+repayment <-ggplot(repayment_df, aes(factor(Year_Short), value, fill = factor(gender))) + geom_bar(stat="identity", position = "dodge") + labs(title = "Repayment Rate by Gender", subtitle = "", caption = "College Scorecards, 2012-2013 to 2016-2017", x = "Year", y = "Percentage Not in Default") + facet_wrap(~name, labeller = label_wrap_gen(multi_line = TRUE), scales="free", ncol=3) +  guides(fill=guide_legend(title="Gender"))
 repayment
 ```
 
@@ -243,11 +247,11 @@ completion_rates_df_long$URM <- factor(completion_rates_df_long$URM, levels=c("U
 
 completion_rates_df_long$value <- as.numeric(as.character(completion_rates_df_long$value))
 
-completion_rates_vis <-ggplot(completion_rates_df_long,   aes(x=Year_Short, y=value, fill=URM)) + geom_bar(stat="identity", position = "fill") + scale_y_continuous(labels = percent_format()) + theme_bw() + labs(title = "Non-White Completion Breakdown", subtitle = "", caption = "College Scorecards, 2012-2013 to 2016-2017", x = "Year", y = "Total") + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) + facet_wrap(~name, labeller = label_wrap_gen(multi_line = TRUE), scales="free", ncol=3)+ guides(fill=guide_legend(title="Minority Type"))
+completion_rates_vis <-ggplot(completion_rates_df_long,   aes(x=Year_Short, y=value, fill=URM)) + geom_bar(stat="identity", position = "fill") + scale_y_continuous(labels = percent_format()) + theme_bw() + labs(title = "Non-White Completion Breakdown", subtitle = "", caption = "College Scorecards, 2012-2013 to 2016-2017", x = "Year", y = "Percentage of Non-White Undergraduates") + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) + facet_wrap(~name, labeller = label_wrap_gen(multi_line = TRUE), scales="free", ncol=3)+ guides(fill=guide_legend(title="Minority Type"))
 
 completion_rates_vis
 
-#To see what this visualization looks like, please visit https://github.com/annlaurawalker/INFM_600/wiki/Sample-Visualizations
+
 ```
 
 
@@ -347,4 +351,3 @@ summary(x,test="Wilks")
 #difference between the response vars
 summary.aov(x)
 ```
-
